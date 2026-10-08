@@ -81,6 +81,9 @@
   .age-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .age-row .input-wrap input { padding-right: 52px; }
   .room-box { margin-top: 16px; padding-top: 16px; border-top: 1px dashed #D8CCB6; }
+  .room-box.need { border: 1.5px solid var(--accent); border-radius: 12px; padding: 14px 16px; background: #FBF1E9; }
+  .lump-warn { display: block; margin-top: 4px; color: var(--accent); font-weight: 700; line-height: 1.55; }
+  .lump-warn a { color: var(--accent); }
   .check-row { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--ink); line-height: 1.5; }
   .check-row input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--accent); flex-shrink: 0; padding: 0; }
   .check-row small { font-size: 12px; color: var(--ink-mute); font-weight: 500; }
@@ -279,7 +282,7 @@
         <button class="chip on" data-v="fast">12월 개설 · 연도 경계 활용<small>개설 즉시 + 1월마다 새 한도, 만기 즉시 재가입</small></button>
         <button class="chip" data-v="yearly">1월 개설<small>매년 1월에 새 한도 (엑셀 방식)</small></button>
       </div>
-      <div class="room-box">
+      <div class="room-box" id="room-box" style="display:none">
         <label class="check-row"><input type="checkbox" id="room-on"><span><b>이월 한도가 쌓여 있는 ISA가 있어요</b> (특수한 경우)<br><small>예전에 만들어 두고 거의 안 넣은 ISA라면 안 쓴 한도가 이월돼 처음에 한 번에 더 많이 넣을 수 있습니다.</small></span></label>
         <div class="grid-auto" id="room-field" style="display:none; margin-top:12px">
           <div class="field">
@@ -699,7 +702,17 @@
     return fmtLong(v) + ' (월 ' + fmtLong(v / 12) + ')' + (state.mode === 'both' && v > 20000000 ? ' · 한도 넘는 돈은 일반계좌에서 대기' : '');
   });
   bindMoney('total', 'total-hint', v => v ? fmtLong(v) + (num('annual') ? ' · ' + Math.ceil(v / Math.min(num('annual') || 1, 20000000)) + '년 납입' : '') : '');
-  bindMoney('lump', 'lump-hint', v => v ? fmtLong(v) : '');
+  bindMoney('lump', 'lump-hint', v => {
+    if (!v) return '';
+    if (v <= 20000000) return fmtLong(v);
+    return fmtLong(v) + '<span class="lump-warn">⚠ 2,000만원 초과 — ISA 연간 한도(2,000만원)를 넘어 한 번에 다 못 넣습니다. 기본은 한도가 생길 때마다 나눠 넣는 것으로 계산합니다. 안 쓴 한도가 쌓인(이월) ISA가 있다면 아래 <a href="#room-box">이월 한도</a>를 체크하세요.</span>';
+  });
+  function applyRoomBox() {
+    const show = state.mode !== 'annual' && num('lump') > 20000000;
+    $('room-box').style.display = show ? '' : 'none';
+    $('room-box').classList.toggle('need', show && !$('room-on').checked);
+  }
+  $('lump').addEventListener('input', applyRoomBox);
   bindMoney('years', 'years-hint', v => (v && num('annual')) ? '매년 저축 합계 ' + fmtLong(v * num('annual')) + ' · 목돈 포함 ' + fmtLong(v * num('annual') + num('lump')) : '');
   bindMoney('room', 'room-hint', v => {
     if (!v) return '';
@@ -707,7 +720,8 @@
     if (v < 20000000) return '<span style="color:#D9542B">기본 한도(2,000만원)보다 작아 2,000만원으로 계산</span>';
     return fmtLong(v) + ' · 첫 ISA에만 적용, 만기 후 새로 여는 ISA는 기본 한도(연 2,000만원)';
   });
-  $('room-on').addEventListener('change', () => { $('room-field').style.display = $('room-on').checked ? '' : 'none'; run(); });
+  function roomActive() { return state.mode !== 'annual' && num('lump') > 20000000 && $('room-on').checked; }
+  $('room-on').addEventListener('change', () => { $('room-field').style.display = $('room-on').checked ? '' : 'none'; applyRoomBox(); run(); });
   function ageMonths() { return Math.min(num('age-y') * 12 + num('age-m'), 999); }
   function updateAgeHint() {
     const e = ageMonths(), el = $('age-hint');
@@ -731,7 +745,7 @@
       $(id).querySelectorAll('.chip').forEach(x => x.classList.remove('on'));
       b.classList.add('on');
       state[key] = cast ? cast(b.dataset.v) : b.dataset.v;
-      if (key === 'mode') { applyMode(); $('horizon').value = ''; refreshHints(); }
+      if (key === 'mode') { applyMode(); $('horizon').value = ''; refreshHints(); applyRoomBox(); }
       run();
     }));
   }
@@ -760,8 +774,8 @@
       mode: state.mode,
       annual: state.mode === 'annual' ? Math.min(num('annual'), 20000000) : num('annual'),
       total: num('total'), lump: num('lump'), years: num('years'),
-      initialRoom: (state.mode !== 'annual' && $('room-on').checked) ? Math.min(num('room'), 100000000) : 0,
-      firstAge: (state.mode !== 'annual' && $('room-on').checked) ? Math.min(ageMonths(), 35) : 0,
+      initialRoom: roomActive() ? Math.min(num('room'), 100000000) : 0,
+      firstAge: roomActive() ? Math.min(ageMonths(), 35) : 0,
       schedule: state.schedule, r,
       freeLimit: state.freeLimit, creditRate: state.creditRate, pensionRate: state.pensionRate,
       reinvest: $('reinvest').checked, horizon: num('horizon'),
@@ -993,6 +1007,7 @@
     $('insight-desc').innerHTML = desc;
   }
 
+  applyRoomBox();
   run();
   let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(run, 200); });
 })();
