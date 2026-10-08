@@ -51,6 +51,7 @@
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
   .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
   .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
   .field { margin-bottom: 4px; }
   input { background: var(--white); border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 14px; font-family: inherit; font-size: 16px;
     color: var(--ink); font-weight: 700; width: 100%; transition: all .15s ease; }
@@ -232,51 +233,45 @@
     <div class="step-label"><div class="step-line"></div><span class="step-text">STEP 01 / 넣을 돈</span></div>
     <label class="label">돈이 어떻게 들어오나요?</label>
     <div class="chips" id="mode-chips">
-      <button class="chip on" data-v="annual">매년 저축해서 넣기<small>월급에서 매년 일정액</small></button>
-      <button class="chip" data-v="lump">목돈을 한 번에<small>이미 모아둔 돈을 옮기기</small></button>
+      <button class="chip on" data-v="annual">매년 저축 (적립식)<small>월급에서 매년 일정액</small></button>
+      <button class="chip" data-v="lump">목돈 한 번에 (거치식)<small>이미 모아둔 돈을 옮기기</small></button>
+      <button class="chip" data-v="both">목돈 + 매년 저축<small>거치식과 적립식을 함께</small></button>
     </div>
 
-    <div id="annual-box" style="margin-top:20px">
-      <div class="grid-3">
-        <div class="field">
-          <label class="label">연간 납입금</label>
-          <div class="input-wrap"><input type="text" inputmode="numeric" id="annual" value="10,000,000"><span class="input-unit">원</span></div>
-          <div class="input-hint" id="annual-hint"></div>
-        </div>
-        <div class="field">
-          <label class="label">총 납입액</label>
-          <div class="input-wrap"><input type="text" inputmode="numeric" id="total" value="100,000,000"><span class="input-unit">원</span></div>
-          <div class="input-hint" id="total-hint"></div>
-        </div>
-        <div class="field">
-          <label class="label">연 수익률 (세전)</label>
-          <div class="input-wrap"><input type="text" inputmode="decimal" id="rate-a" value="8"><span class="input-unit">%</span></div>
-          <div class="input-hint">ISA·연금저축·일반계좌 모두 같은 수익률</div>
-        </div>
+    <div class="grid-auto" style="margin-top:20px">
+      <div class="field" id="f-lump" style="display:none">
+        <label class="label">목돈 (처음에 한 번)</label>
+        <div class="input-wrap"><input type="text" inputmode="numeric" id="lump" value="100,000,000"><span class="input-unit">원</span></div>
+        <div class="input-hint" id="lump-hint"></div>
+      </div>
+      <div class="field" id="f-annual">
+        <label class="label" id="annual-label">연간 납입금</label>
+        <div class="input-wrap"><input type="text" inputmode="numeric" id="annual" value="10,000,000"><span class="input-unit">원</span></div>
+        <div class="input-hint" id="annual-hint"></div>
+      </div>
+      <div class="field" id="f-total">
+        <label class="label">총 납입액</label>
+        <div class="input-wrap"><input type="text" inputmode="numeric" id="total" value="100,000,000"><span class="input-unit">원</span></div>
+        <div class="input-hint" id="total-hint"></div>
+      </div>
+      <div class="field" id="f-years" style="display:none">
+        <label class="label">매년 저축하는 기간</label>
+        <div class="input-wrap"><input type="text" inputmode="numeric" id="years" value="10"><span class="input-unit">년</span></div>
+        <div class="input-hint" id="years-hint"></div>
+      </div>
+      <div class="field">
+        <label class="label">연 수익률 (세전)</label>
+        <div class="input-wrap"><input type="text" inputmode="decimal" id="rate" value="8"><span class="input-unit">%</span></div>
+        <div class="input-hint">ISA·연금저축·일반계좌 모두 같은 수익률</div>
       </div>
     </div>
 
-    <div id="lump-box" style="margin-top:20px; display:none">
-      <div class="grid-3">
-        <div class="field">
-          <label class="label">목돈</label>
-          <div class="input-wrap"><input type="text" inputmode="numeric" id="lump" value="100,000,000"><span class="input-unit">원</span></div>
-          <div class="input-hint" id="lump-hint"></div>
-        </div>
-        <div class="field">
-          <label class="label">연 수익률 (세전)</label>
-          <div class="input-wrap"><input type="text" inputmode="decimal" id="rate-l" value="8"><span class="input-unit">%</span></div>
-          <div class="input-hint">ISA에 들어가기 전 돈은 일반계좌에서 같은 수익률로 운용</div>
-        </div>
-        <div></div>
-      </div>
-      <div class="sub-box">
-        <div class="sub-title">ISA에 넣는 방식</div>
-        <div class="sub-desc">ISA 연간 한도(2,000만원)는 <strong>매년 1월 첫 영업일</strong>에 새로 생기고, 만기는 <strong>가입일부터 3년</strong>입니다. 12월에 개설하면 한 사이클이 4개 연도의 한도를 쓰고, 만기 해지 후 바로 새로 만들면 그 해 한도가 또 생깁니다.</div>
-        <div class="chips" id="sched-chips">
-          <button class="chip on" data-v="fast">12월 개설 · 연도 경계 활용<small>개설 즉시 + 1월마다 2,000만원, 만기 즉시 재가입</small></button>
-          <button class="chip" data-v="yearly">매년 1월에 한 번<small>연 2,000만원씩 (엑셀 방식)</small></button>
-        </div>
+    <div class="sub-box" id="sched-box" style="display:none">
+      <div class="sub-title">ISA에 넣는 방식</div>
+      <div class="sub-desc">ISA 연간 한도(2,000만원)는 <strong>매년 1월 첫 영업일</strong>에 새로 생기고(안 쓴 한도는 이월), 만기는 <strong>가입일부터 3년</strong>입니다. 12월에 개설하면 한 사이클이 4개 연도의 한도를 쓰고, 만기 해지 후 바로 새로 만들면 그 해 한도가 또 생깁니다. 한도를 넘는 돈은 일반계좌에서 기다렸다가 한도가 생기는 대로 ISA로 옮깁니다.</div>
+      <div class="chips" id="sched-chips">
+        <button class="chip on" data-v="fast">12월 개설 · 연도 경계 활용<small>개설 즉시 + 1월마다 새 한도, 만기 즉시 재가입</small></button>
+        <button class="chip" data-v="yearly">1월 개설<small>매년 1월에 새 한도 (엑셀 방식)</small></button>
       </div>
     </div>
 
@@ -351,7 +346,7 @@
     <div class="fast-title" id="fast-title"></div>
     <div class="sub-desc" id="fast-desc" style="margin-bottom:0"></div>
     <div class="fast-grid">
-      <div class="fast-item"><div class="k">ISA에 다 넣는 시점</div><div class="v" id="f-when"></div><div class="s" id="f-when-s"></div></div>
+      <div class="fast-item"><div class="k">목돈을 ISA에 다 옮긴 시점</div><div class="v" id="f-when"></div><div class="s" id="f-when-s"></div></div>
       <div class="fast-item"><div class="k">전략A 세후 (연금수령)</div><div class="v" id="f-a"></div><div class="s" id="f-a-s"></div></div>
       <div class="fast-item"><div class="k">전략B 세후</div><div class="v" id="f-b"></div><div class="s" id="f-b-s"></div></div>
     </div>
@@ -485,14 +480,18 @@
     });
     if (hintId) $(hintId).innerHTML = hintFn(num(id));
   }
-  bindMoney('annual', 'annual-hint', v => v > 20000000 ? '<span style="color:#D9542B">ISA 연간 한도는 2,000만원 → 2,000만원으로 계산</span>' : (v ? fmtLong(v) + ' (월 ' + fmtLong(v / 12) + ')' : ''));
+  bindMoney('annual', 'annual-hint', v => {
+    if (!v) return '';
+    if (state.mode === 'annual' && v > 20000000) return '<span style="color:#D9542B">ISA 연간 한도는 2,000만원 → 2,000만원으로 계산</span>';
+    return fmtLong(v) + ' (월 ' + fmtLong(v / 12) + ')' + (state.mode === 'both' && v > 20000000 ? ' · 한도 넘는 돈은 일반계좌에서 대기' : '');
+  });
   bindMoney('total', 'total-hint', v => v ? fmtLong(v) + (num('annual') ? ' · ' + Math.ceil(v / Math.min(num('annual') || 1, 20000000)) + '년 납입' : '') : '');
-  bindMoney('lump', 'lump-hint', v => v ? fmtLong(v) + (v > 1e8 ? ' · 전략B는 1억까지만 ISA, 나머지는 일반계좌' : '') : '');
-  ['rate-a', 'rate-l', 'horizon'].forEach(id => $(id).addEventListener('input', () => {
-    if (id === 'rate-a') $('rate-l').value = $('rate-a').value;
-    if (id === 'rate-l') $('rate-a').value = $('rate-l').value;
-    run();
-  }));
+  bindMoney('lump', 'lump-hint', v => v ? fmtLong(v) : '');
+  bindMoney('years', 'years-hint', v => (v && num('annual')) ? '매년 저축 합계 ' + fmtLong(v * num('annual')) + ' · 목돈 포함 ' + fmtLong(v * num('annual') + num('lump')) : '');
+  ['rate', 'horizon'].forEach(id => $(id).addEventListener('input', run));
+  function refreshHints() {
+    ['annual', 'total', 'lump', 'years'].forEach(id => $(id).dispatchEvent(new Event('input')));
+  }
   $('reinvest').addEventListener('change', run);
 
   function chipGroup(id, key, cast) {
@@ -500,13 +499,22 @@
       $(id).querySelectorAll('.chip').forEach(x => x.classList.remove('on'));
       b.classList.add('on');
       state[key] = cast ? cast(b.dataset.v) : b.dataset.v;
-      if (key === 'mode') {
-        $('annual-box').style.display = state.mode === 'annual' ? '' : 'none';
-        $('lump-box').style.display = state.mode === 'lump' ? '' : 'none';
-        $('horizon').value = '';
-      }
+      if (key === 'mode') { applyMode(); $('horizon').value = ''; refreshHints(); }
       run();
     }));
+  }
+  function applyMode() {
+    const m = state.mode;
+    $('f-lump').style.display = m === 'annual' ? 'none' : '';
+    $('f-annual').style.display = m === 'lump' ? 'none' : '';
+    $('f-total').style.display = m === 'annual' ? '' : 'none';
+    $('f-years').style.display = m === 'both' ? '' : 'none';
+    $('sched-box').style.display = m === 'annual' ? 'none' : '';
+    $('annual-label').textContent = m === 'both' ? '매년 추가 저축' : '연간 납입금';
+    if (m === 'both' && num('lump') === 100000000 && num('annual') === 10000000) {
+      // 목돈+적립 기본 예시: 목돈 5,000만 + 매년 1,200만 × 10년
+      $('lump').value = (50000000).toLocaleString(); $('annual').value = (12000000).toLocaleString();
+    }
   }
   chipGroup('mode-chips', 'mode');
   chipGroup('sched-chips', 'schedule');
@@ -515,10 +523,11 @@
   chipGroup('age-chips', 'pensionRate', Number);
 
   function params(extra) {
-    const r = (num(state.mode === 'annual' ? 'rate-a' : 'rate-l')) / 100;
+    const r = num('rate') / 100;
     return Object.assign({
       mode: state.mode,
-      annual: Math.min(num('annual'), 20000000), total: num('total'), lump: num('lump'),
+      annual: state.mode === 'annual' ? Math.min(num('annual'), 20000000) : num('annual'),
+      total: num('total'), lump: num('lump'), years: num('years'),
       schedule: state.schedule, r,
       freeLimit: state.freeLimit, creditRate: state.creditRate, pensionRate: state.pensionRate,
       reinvest: $('reinvest').checked, horizon: num('horizon'),
@@ -528,11 +537,13 @@
   // ---------- 계산 & 렌더 ----------
   function run() {
     const base = params();
-    if ((base.mode === 'annual' && (base.annual <= 0 || base.total <= 0)) || (base.mode === 'lump' && base.lump <= 0)) return;
+    if (base.mode === 'annual' && (base.annual <= 0 || base.total <= 0)) return;
+    if (base.mode === 'lump' && base.lump <= 0) return;
+    if (base.mode === 'both' && (base.lump <= 0 && (base.annual <= 0 || base.years <= 0))) return;
     if (base.r < 0 || base.r > 0.5) return;
 
     let res, alt = null;
-    if (base.mode === 'lump') {
+    if (base.mode !== 'annual') {
       // 두 방식 모두 같은 기간으로 맞춰 비교
       const other = state.schedule === 'fast' ? 'yearly' : 'fast';
       const p1 = IsaEngine.simulate(Object.assign({}, base, { horizon: 0 }));
@@ -573,20 +584,21 @@
     $('s-ao-sub').textContent = '기타소득세 16.5% · ' + fmtWon(f.aOther);
     $('s-b').textContent = fmt(f.b);
     $('s-b-sub').textContent = 'ISA 해지 시 9.9% 분리과세' + (f.bGen > 1 ? ' · 일반계좌 ' + fmt(f.bGenAfter) + ' 포함' : '') + ' · ' + fmtWon(f.b);
-    $('s-paid-label').textContent = state.mode === 'lump' ? '전략A가 ISA에 넣은 돈' : '총 납입액';
+    $('s-paid-label').textContent = state.mode === 'annual' ? '총 납입액' : '전략A가 ISA에 넣은 돈';
     $('s-paid').textContent = fmt(f.paid);
-    $('s-paid-sub').textContent = (state.mode === 'lump' ? '목돈 + 기다리는 동안 불어난 돈(세후) · ' : '') + 'ISA 이전 ' + res.transfers.length + '회 · 세액공제 환급 ' + fmt(f.totalRefund);
+    $('s-paid-sub').textContent = (state.mode === 'annual' ? '' : '넣은 돈 ' + fmt(f.inflowTotal) + ' + 기다리는 동안 불어난 돈(세후) · ') + 'ISA 이전 ' + res.transfers.length + '회 · 세액공제 환급 ' + fmt(f.totalRefund);
 
     // 연도 경계 효과 박스
     if (alt) {
       const fast = state.schedule === 'fast' ? res : alt, slow = state.schedule === 'fast' ? alt : res;
       $('fast-box').style.display = '';
-      $('fast-title').textContent = '12월 개설·만기 즉시 재가입 vs 매년 1월 한 번 (같은 ' + H + '년 기준)';
+      $('fast-title').textContent = '12월 개설·만기 즉시 재가입 vs 1월 개설 (같은 ' + H + '년 기준)';
       const gainA = fast.final.aPension - slow.final.aPension, gainB = fast.final.b - slow.final.b;
       $('fast-desc').innerHTML = '같은 목돈을 ISA에 얼마나 빨리 옮기느냐의 차이입니다. 빨리 옮길수록 일반계좌에서 15.4% 과세되는 기간이 줄어듭니다. '
-        + (base.lump > 1e8 ? '1억원을 넘는 목돈이면 ISA를 갈아타는 전략A만 한도가 계속 새로 생겨 차이가 커집니다.' : '');
-      $('f-when').textContent = monthLabel(fast.lastDepositA).replace('년차 초', '년') + ' vs ' + monthLabel(slow.lastDepositA).replace('년차 초', '년');
-      $('f-when-s').textContent = '전략A 기준 (연도 경계 활용 vs 매년 1월)';
+        + (f.inflowTotal > 1e8 ? '넣는 돈이 1억원을 넘으면 ISA를 갈아타는 전략A만 한도가 계속 새로 생겨 차이가 커집니다.' : '');
+      const done = x => x.lumpDoneA >= 0 ? monthLabel(x.lumpDoneA).replace('년차 초', '년') : '운용 끝까지 못 다 넣음';
+      $('f-when').textContent = done(fast) + ' vs ' + done(slow);
+      $('f-when-s').textContent = '전략A 기준, 목돈을 ISA에 다 옮긴 시점 (12월 개설 vs 1월 개설)';
       $('f-a').textContent = (gainA >= 0 ? '+' : '') + fmtLong(gainA);
       $('f-a-s').textContent = fmt(fast.final.aPension) + ' vs ' + fmt(slow.final.aPension);
       $('f-b').textContent = (gainB >= 0 ? '+' : '') + fmtLong(gainB);
@@ -619,7 +631,7 @@
     }).join('');
     $('tbody').innerHTML = rows;
     const p = params();
-    $('table-note').innerHTML = '평가액은 세금 떼기 전 금액입니다. A 평가액 = ISA 잔액 + 연금저축 잔액 + 환급액' + (p.mode === 'lump' ? ' + 아직 ISA에 못 넣은 일반계좌 대기자금' : '')
+    $('table-note').innerHTML = '평가액은 세금 떼기 전 금액입니다. A 평가액 = ISA 잔액 + 연금저축 잔액 + 환급액' + (p.mode !== 'annual' ? ' + 아직 ISA에 못 넣은 일반계좌 대기자금' : '')
       + '. ★ 해에 ISA를 해지해 세금(비과세 한도 초과분 9.9%)을 내고 남은 돈을 연금저축으로 옮긴 뒤 바로 새 ISA를 시작합니다.';
   }
 
@@ -674,13 +686,13 @@
 
   function renderCharts(res) {
     const labels = res.years.map(y => y.year + '년');
-    const lumpMode = state.mode === 'lump';
-    const paid = lumpMode ? res.years.map(() => num('lump')) : res.years.map(y => Math.max(y.aPaid, y.bPaid));
+    const annualMode = state.mode === 'annual';
+    const paid = res.years.map(y => y.inflowTotal);
     const mobile = window.innerWidth < 768;
     const ds = [
       { label: '전략A 연금 이전', _short: 'A', data: res.years.map(y => y.aTotal), borderColor: '#D9542B', backgroundColor: '#D9542B', borderWidth: 3, pointRadius: res.years.map(y => y.tr > 0 ? 4 : 0), tension: 0.15 },
       { label: '전략B ISA 유지', _short: 'B', data: res.years.map(y => y.bTotal), borderColor: '#8B6F47', backgroundColor: '#8B6F47', borderWidth: 3, pointRadius: 0, tension: 0.15 },
-      { label: lumpMode ? '처음 목돈' : '납입 원금', _short: lumpMode ? '목돈' : '원금', data: paid, borderColor: '#9B9387', backgroundColor: '#9B9387', borderWidth: 2, borderDash: [5, 5], pointRadius: 0 },
+      { label: annualMode ? '납입 원금' : '넣은 원금', _short: '원금', data: paid, borderColor: '#9B9387', backgroundColor: '#9B9387', borderWidth: 2, borderDash: [5, 5], pointRadius: 0 },
     ];
     if (lineChart) lineChart.destroy();
     lineChart = new Chart($('chart-line'), {
