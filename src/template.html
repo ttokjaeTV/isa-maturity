@@ -80,6 +80,12 @@
   .toggle-switch input:checked + .toggle-slider:before { transform: translateX(26px); }
   .age-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .age-row .input-wrap input { padding-right: 52px; }
+  select { background: var(--white); border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 14px; font-family: inherit; font-size: 16px; color: var(--ink); font-weight: 700; width: 100%; cursor: pointer; }
+  select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .month-row { display: grid; grid-template-columns: 180px 1fr; gap: 16px; align-items: end; }
+  .month-note { font-size: 13px; color: var(--ink-soft); font-weight: 600; line-height: 1.6; background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
+  .month-note b { color: var(--accent); }
+  @media (max-width: 768px) { .month-row { grid-template-columns: 1fr; gap: 10px; } }
   .room-box { margin-top: 16px; padding-top: 16px; border-top: 1px dashed #D8CCB6; }
   .room-box.need { border: 1.5px solid var(--accent); border-radius: 12px; padding: 14px 16px; background: #FBF1E9; }
   .lump-warn { display: block; margin-top: 4px; color: var(--accent); font-weight: 700; line-height: 1.55; }
@@ -277,10 +283,17 @@
 
     <div class="sub-box" id="sched-box" style="display:none">
       <div class="sub-title">ISA에 넣는 방식</div>
-      <div class="sub-desc">ISA 연간 한도(2,000만원)는 <strong>매년 1월 첫 영업일</strong>에 새로 생기고(안 쓴 한도는 이월), 만기는 <strong>가입일부터 3년</strong>입니다. 12월에 개설하면 한 사이클이 4개 연도의 한도를 쓰고, 만기 해지 후 바로 새로 만들면 그 해 한도가 또 생깁니다. 한도를 넘는 돈은 일반계좌에서 기다렸다가 한도가 생기는 대로 ISA로 옮깁니다.</div>
-      <div class="chips" id="sched-chips">
-        <button class="chip on" data-v="fast">12월 개설 · 연도 경계 활용<small>개설 즉시 + 1월마다 새 한도, 만기 즉시 재가입</small></button>
-        <button class="chip" data-v="yearly">1월 개설<small>매년 1월에 새 한도 (엑셀 방식)</small></button>
+      <div class="sub-desc">ISA 연간 한도(2,000만원)는 <strong>매년 1월 첫 영업일</strong>에 새로 생기고(안 쓴 한도는 이월), 만기는 <strong>가입일부터 3년</strong>입니다. 그래서 몇 월에 여느냐에 따라 다음 한도가 생기기까지 걸리는 시간이 달라집니다. 한도를 넘는 돈은 일반계좌에서 기다렸다가 한도가 생기는 대로 ISA로 옮기고, 만기에 해지하면 바로 새 ISA를 엽니다.</div>
+      <div class="month-row">
+        <div class="field">
+          <label class="label" id="open-month-label">ISA 개설 월</label>
+          <select id="open-month">
+            <option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option>
+            <option value="5">5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option>
+            <option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12" selected>12월</option>
+          </select>
+        </div>
+        <div class="month-note" id="open-month-note"></div>
       </div>
       <div class="room-box" id="room-box" style="display:none">
         <label class="check-row"><input type="checkbox" id="room-on"><span><b>이월 한도가 쌓여 있는 ISA가 있어요</b> (특수한 경우)<br><small>예전에 만들어 두고 거의 안 넣은 ISA라면 안 쓴 한도가 이월돼 처음에 한 번에 더 많이 넣을 수 있습니다.</small></span></label>
@@ -421,7 +434,7 @@
       <li><strong>연금 전환 세액공제</strong>: ISA 만기 후 60일 이내 연금계좌로 옮기면 전환금액의 10%(최대 300만원)를 기존 세액공제 한도에 더해 공제. 환급액은 이전한 해에 받는 것으로 단순화했습니다(실제로는 다음 해 연말정산).</li>
       <li><strong>연금저축 과세</strong>: 세액공제 안 받은 원금은 비과세, 세액공제 받은 원금과 운용수익은 연금으로 받으면 연금소득세(55~69세 5.5%, 70~79세 4.4%, 80세~ 3.3%), 연금 외로 한 번에 찾으면 기타소득세 16.5%.</li>
       <li><strong>연금 수령 한도</strong>: 사적연금을 연 1,500만원 넘게 받으면 그 해 전체를 종합과세하거나 16.5% 분리과세 중 고릅니다. 이 계산은 1,500만원 이하로 나눠 받는다고 보고 연금소득세율을 적용합니다. 55세 이후·가입 5년 경과 등 연금수령 요건은 충족한다고 가정합니다.</li>
-      <li><strong>납입 한도</strong>: 계좌를 연 달에 그 해 2,000만원, 매년 1월에 2,000만원씩 한도가 생깁니다. 한도를 넘는 돈은 일반계좌에서 기다렸다가 한도가 생기는 대로 옮깁니다. ‘이월 한도’ 옵션을 켜면 첫 ISA(전략A의 첫 사이클, 전략B 계좌)에만 입력한 한도를 처음부터 쓰고, 그 계좌의 첫 만기는 가입 후 지난 기간만큼 앞당겨집니다(이후 새 ISA는 기본 한도·3년 주기). 이때 ‘12월/1월 개설’ 선택은 지금이 12월인지 1월인지로 계산합니다.</li>
+      <li><strong>납입 한도</strong>: 계좌를 연 달에 그 해 2,000만원, 매년 1월에 2,000만원씩 한도가 생깁니다. 한도를 넘는 돈은 일반계좌에서 기다렸다가 한도가 생기는 대로 옮깁니다. ‘이월 한도’ 옵션을 켜면 첫 ISA(전략A의 첫 사이클, 전략B 계좌)에만 입력한 한도를 처음부터 쓰고, 그 계좌의 첫 만기는 가입 후 지난 기간만큼 앞당겨집니다(이후 새 ISA는 기본 한도·3년 주기). 이때 ‘ISA 개설 월’ 칸은 지금이 몇 월인지로 계산합니다.</li>
       <li><strong>전략B</strong>: ISA 하나를 끝까지 유지하고 운용 종료 시점에 해지합니다. 총 납입 1억원을 넘는 돈은 일반계좌에 둡니다.</li>
       <li><strong>일반계좌</strong>(목돈 대기자금·B의 한도 초과분): 같은 수익률로 운용하고, 이익을 실현할 때 15.4% 과세(국내상장 해외 ETF 기준). 금융소득종합과세·건강보험료는 반영하지 않았습니다.</li>
       <li><strong>그 밖에 빠진 것</strong>: 매매 수수료·ETF 보수, 수익률 변동, 중도 인출, 연금 수령 기간 중 운용수익. 매년 같은 수익률이 나온다고 가정한 단순 비교입니다.</li>
@@ -458,7 +471,7 @@
 <script>
 (function () {
   const $ = id => document.getElementById(id);
-  const state = { mode: 'annual', schedule: 'fast', freeLimit: 2000000, creditRate: 0.132, pensionRate: 0.055 };
+  const state = { mode: 'annual', openMonth: 12, freeLimit: 2000000, creditRate: 0.132, pensionRate: 0.055 };
   let lineChart = null, barChart = null;
 
   // ---------- 포맷 ----------
@@ -575,7 +588,16 @@
     }
   }
   chipGroup('mode-chips', 'mode');
-  chipGroup('sched-chips', 'schedule');
+  function monthNote() {
+    const mo = state.openMonth, gap = mo === 1 ? 12 : 13 - mo, yrs = mo === 1 ? 3 : 4;
+    const existing = roomActive();
+    $('open-month-label').textContent = existing ? '지금이 몇 월인가요' : 'ISA 개설 월';
+    $('open-month-note').innerHTML = existing
+      ? '기존 ISA에서는 다음 1월 새 한도가 <b>' + gap + '개월 뒤</b>에 생깁니다. 만기 후 새로 여는 ISA도 그 달 기준으로 이어집니다.'
+      : '처음 2,000만원은 개설할 때, 다음 2,000만원은 <b>' + gap + '개월 뒤</b> 1월에 생깁니다. 3년 동안 <b>' + yrs + '개 연도 한도(최대 ' + (yrs * 2) + ',000만원)</b>를 씁니다.'
+        + (mo === 12 ? ' 다음 한도가 가장 빨리 생기는 달입니다.' : mo === 1 ? ' 매년 1월 한 번씩 넣는 엑셀 방식과 같습니다.' : '');
+  }
+  $('open-month').addEventListener('change', () => { state.openMonth = Number($('open-month').value); run(); });
   chipGroup('free-chips', 'freeLimit', Number);
   chipGroup('credit-chips', 'creditRate', Number);
   chipGroup('age-chips', 'pensionRate', Number);
@@ -588,7 +610,7 @@
       total: num('total'), lump: num('lump'), years: num('years'),
       initialRoom: roomActive() ? Math.min(num('room'), 100000000) : 0,
       firstAge: roomActive() ? Math.min(ageMonths(), 35) : 0,
-      schedule: state.schedule, r,
+      openMonth: state.openMonth, r,
       freeLimit: state.freeLimit, creditRate: state.creditRate, pensionRate: state.pensionRate,
       reinvest: $('reinvest').checked, horizon: num('horizon'),
     }, extra || {});
@@ -605,19 +627,21 @@
     let res, alt = null;
     if (base.mode !== 'annual') {
       // 두 방식 모두 같은 기간으로 맞춰 비교
-      const other = state.schedule === 'fast' ? 'yearly' : 'fast';
+      const other = state.openMonth === 1 ? 12 : 1; // 비교 상대: 1월 개설(선택이 1월이면 12월)
       const p1 = IsaEngine.simulate(Object.assign({}, base, { horizon: 0 }));
-      const p2 = IsaEngine.simulate(Object.assign({}, base, { schedule: other, horizon: 0 }));
+      const p2 = IsaEngine.simulate(Object.assign({}, base, { openMonth: other, horizon: 0 }));
       const minH = Math.max(p1.minYears, p2.minYears);
       const H = Math.max(minH, base.horizon || 0);
       res = IsaEngine.simulate(Object.assign({}, base, { horizon: H }));
-      alt = IsaEngine.simulate(Object.assign({}, base, { schedule: other, horizon: H }));
+      alt = IsaEngine.simulate(Object.assign({}, base, { openMonth: other, horizon: H }));
+      alt.openMonth = other;
       res.minShown = minH;
     } else {
       res = IsaEngine.simulate(base);
       res.minShown = res.minYears;
     }
     const H = res.H, f = res.final;
+    monthNote();
 
     // 운용기간 힌트
     const userH = num('horizon');
@@ -650,15 +674,16 @@
 
     // 연도 경계 효과 박스
     if (alt) {
-      const fast = state.schedule === 'fast' ? res : alt, slow = state.schedule === 'fast' ? alt : res;
+      const mine = res, cmp = alt, mo = state.openMonth, om = alt.openMonth;
+      const fast = mine, slow = cmp; // fast = 선택한 달, slow = 비교 달
       $('fast-box').style.display = '';
-      $('fast-title').textContent = '12월 개설·만기 즉시 재가입 vs 1월 개설 (같은 ' + H + '년 기준)';
+      $('fast-title').textContent = mo + '월 개설 vs ' + om + '월 개설 (같은 ' + H + '년 기준)';
       const gainA = fast.final.aPension - slow.final.aPension, gainB = fast.final.b - slow.final.b;
-      $('fast-desc').innerHTML = '같은 목돈을 ISA에 얼마나 빨리 옮기느냐의 차이입니다. 빨리 옮길수록 일반계좌에서 15.4% 과세되는 기간이 줄어듭니다. '
+      $('fast-desc').innerHTML = '같은 돈을 ISA에 얼마나 빨리 옮기느냐의 차이입니다. 빨리 옮길수록 일반계좌에서 15.4% 과세되는 기간이 줄어듭니다. '
         + (f.inflowTotal > 1e8 ? '넣는 돈이 1억원을 넘으면 ISA를 갈아타는 전략A만 한도가 계속 새로 생겨 차이가 커집니다.' : '');
       const done = x => x.lumpDoneA >= 0 ? monthLabel(x.lumpDoneA).replace('년차 초', '년') : '운용 끝까지 못 다 넣음';
       $('f-when').textContent = done(fast) + ' vs ' + done(slow);
-      $('f-when-s').textContent = '전략A 기준, 목돈을 ISA에 다 옮긴 시점 (12월 개설 vs 1월 개설)';
+      $('f-when-s').textContent = '전략A 기준, 목돈을 ISA에 다 옮긴 시점 (' + mo + '월 vs ' + om + '월 개설)';
       $('f-a').textContent = (gainA >= 0 ? '+' : '') + fmtLong(gainA);
       $('f-a-s').textContent = fmt(fast.final.aPension) + ' vs ' + fmt(slow.final.aPension);
       $('f-b').textContent = (gainB >= 0 ? '+' : '') + fmtLong(gainB);

@@ -9,7 +9,8 @@
  *    계좌당 총 납입 1억원. 해지 후 새로 연 계좌는 한도가 처음부터 다시 생긴다.
  *  - initialRoom: 이미 가입해 둔 ISA에 이월 한도가 쌓인 특수한 경우, 첫 계좌(A의 첫 사이클·B)에 처음부터 그만큼 한도가 있다고 본다.
  *  - firstAge: 그 기존 ISA를 가입한 지 지난 개월 수(0~35). 첫 만기는 (36 − firstAge)개월 뒤, 이후 3년마다.
- *  - schedule 'yearly': 1월에 개설(매년 1월 1회 넣는 엑셀 방식), 'fast': 12월에 개설(다음 달 1월에 바로 새 연도 한도).
+ *  - openMonth: ISA를 여는 달(1~12). 그 달에 그 해 한도, 다음 1월부터 매년 새 한도. 1월이면 매년 1월 1회(엑셀 방식),
+ *    12월이면 한 달 뒤 1월에 바로 다음 해 한도가 생겨 가장 빨리 넣을 수 있다. (옛 schedule 'yearly'=1월, 'fast'=12월도 받음)
  * 시간 단위: 월. 수익률은 월 복리((1+r)^(1/12))로 환산해 연 단위 결과가 엑셀과 같게 맞춘다.
  */
 (function (root) {
@@ -54,13 +55,15 @@
   function simulate(p) {
     const P = Object.assign({
       mode: 'annual', annual: 10000000, total: 100000000, lump: 100000000, years: 10,
-      schedule: 'yearly', r: 0.08, freeLimit: 2000000, isaTax: 0.099,
+      openMonth: 0, schedule: 'yearly', r: 0.08, freeLimit: 2000000, isaTax: 0.099,
       creditRate: 0.132, pensionRate: 0.055, otherRate: 0.165, genTax: 0.154,
       reinvest: true, horizon: 0, excelRefund: false,
       initialRoom: 0, // >0이면 첫 ISA에 이월 한도가 쌓여 있어 처음에 이만큼 넣을 수 있음(최대 1억)
       firstAge: 0,    // 기존 ISA 가입 후 지난 개월 수 (0~35)
     }, p || {});
-    if (P.mode === 'annual') P.schedule = 'yearly';
+    if (!(P.openMonth >= 1 && P.openMonth <= 12)) P.openMonth = P.schedule === 'fast' ? 12 : 1;
+    P.openMonth = Math.round(P.openMonth);
+    if (P.mode === 'annual') P.openMonth = 1;
     const g1 = Math.pow(1 + P.r, 1 / 12);
     const inflows = buildInflows(P);
     P.firstAge = Math.max(0, Math.min(35, Math.round(P.firstAge || 0)));
@@ -78,7 +81,7 @@
   }
 
   function runCore(P, g1, inflows, endM, probe) {
-    const isJan = m => (P.schedule === 'fast' ? m % 12 === 1 : m % 12 === 0);
+    const isJan = m => (P.openMonth - 1 + m) % 12 === 0; // m개월 뒤가 1월인지 (m=0은 개설 달)
     const firstRoom = P.initialRoom > 0 ? Math.min(Math.max(P.initialRoom, ISA_YEAR_LIMIT), ISA_TOTAL_LIMIT) : ISA_YEAR_LIMIT;
     const m1 = 36 - (P.firstAge || 0);
     const isMat = m => m > 0 && m >= m1 && (m - m1) % 36 === 0;
