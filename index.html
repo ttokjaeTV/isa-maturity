@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ISA 만기 전략 계산기 | 똑재TV</title>
+<meta name="description" content="ISA 3년 만기마다 연금저축으로 옮길까, 그냥 계속 둘까? 세후 자산을 연차별로 비교하는 계산기">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+<style>
+  :root {
+    --bg: #F5EFE6; --bg-alt: #EFE7DA; --ink: #1A1A1A; --ink-soft: #4A4A4A; --ink-mute: #8B8276;
+    --accent: #D9542B; --accent-soft: #F4D5C4; --border: #E5DCC8; --white: #FBF7F0;
+    --brown: #8B6F47; --beige-gold: #C4A57B; --dark-warm: #3A2F26; --dark-warm-soft: #5A4A3D; --green: #4A5A4A;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--ink);
+    padding: 32px 24px; line-height: 1.5; -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums; }
+  .container { max-width: 1200px; margin: 0 auto; }
+  header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 48px; }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon { width: 36px; height: 36px; background: var(--dark-warm); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--white); font-weight: 900; font-size: 18px; }
+  .logo-name { font-size: 16px; font-weight: 900; letter-spacing: -0.3px; }
+  .logo-sub { font-size: 10px; color: var(--ink-mute); font-weight: 700; letter-spacing: 1px; }
+  .header-date { font-size: 12px; color: var(--ink-mute); font-weight: 600; }
+
+  .hero { text-align: center; margin-bottom: 48px; }
+  .tag { display: inline-flex; align-items: center; gap: 6px; background: var(--white); border: 1.5px solid var(--accent); color: var(--accent);
+    padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 28px; }
+  .tag .dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; }
+  .hero-title { font-size: 60px; font-weight: 900; letter-spacing: -2.5px; line-height: 1.1; margin-bottom: 24px; }
+  .underline-mark { background: linear-gradient(transparent 60%, var(--accent-soft) 60%); padding: 0 4px; }
+  .hero-desc { font-size: 17px; color: var(--ink-soft); line-height: 1.7; font-weight: 500; max-width: 640px; margin: 0 auto; }
+
+  .top-cta { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 16px; padding: 18px 24px; margin-bottom: 32px;
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+  .top-cta-text { font-size: 14px; color: var(--ink-soft); font-weight: 500; }
+  .top-cta-links { display: flex; gap: 8px; flex-wrap: wrap; }
+  .top-cta-link { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 700;
+    text-decoration: none; background: var(--white); border: 1.5px solid var(--border); color: var(--ink); }
+  .top-cta-link.primary { background: var(--accent); color: var(--white); border-color: var(--accent); }
+  .naver-mark { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; background: #03C75A; color: #FFFFFF;
+    font-weight: 900; font-size: 11px; border-radius: 3px; line-height: 1; flex-shrink: 0; }
+
+  .card { background: var(--white); border: 1px solid var(--border); border-radius: 20px; padding: 28px; margin-bottom: 32px; }
+  .step-label { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
+  .step-line { width: 28px; height: 2px; background: var(--accent); }
+  .step-text { font-size: 12px; font-weight: 800; letter-spacing: 1.5px; color: var(--accent); }
+  .label { font-size: 12px; font-weight: 700; letter-spacing: 0.5px; color: var(--ink-mute); margin-bottom: 8px; display: block; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .field { margin-bottom: 4px; }
+  input { background: var(--white); border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 14px; font-family: inherit; font-size: 16px;
+    color: var(--ink); font-weight: 700; width: 100%; transition: all .15s ease; }
+  input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .input-wrap { position: relative; }
+  .input-wrap input { padding-right: 44px; text-align: right; }
+  .input-unit { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 14px; font-weight: 700; color: var(--ink-mute); pointer-events: none; }
+  .input-hint { font-size: 12px; font-weight: 600; color: var(--ink-mute); margin-top: 6px; min-height: 18px; }
+  .input-hint.warn { color: var(--accent); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { border: 1.5px solid var(--border); background: var(--white); color: var(--ink-soft); padding: 9px 14px; border-radius: 10px; font-family: inherit;
+    font-size: 14px; font-weight: 700; cursor: pointer; transition: all .15s ease; text-align: left; line-height: 1.35; }
+  .chip small { display: block; font-size: 11px; font-weight: 600; color: var(--ink-mute); }
+  .chip:hover { border-color: var(--accent); }
+  .chip.on { background: var(--dark-warm); border-color: var(--dark-warm); color: var(--white); }
+  .chip.on small { color: var(--accent-soft); }
+  .sub-box { margin-top: 20px; padding: 18px 20px; background: var(--bg-alt); border-radius: 14px; }
+  .sub-title { font-size: 14px; font-weight: 800; margin-bottom: 4px; }
+  .sub-desc { font-size: 13px; color: var(--ink-soft); font-weight: 500; line-height: 1.6; margin-bottom: 12px; }
+  .row-toggle { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .toggle-switch { position: relative; display: inline-block; width: 56px; height: 30px; flex-shrink: 0; }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider { position: absolute; cursor: pointer; inset: 0; background: #C4B8A3; transition: .25s; border-radius: 30px; }
+  .toggle-slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 4px; bottom: 4px; background: var(--white); transition: .25s; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+  .toggle-switch input:checked + .toggle-slider { background: var(--accent); }
+  .toggle-switch input:checked + .toggle-slider:before { transform: translateX(26px); }
+  .divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+  .verdict { background: var(--dark-warm); color: var(--white); border-radius: 20px; padding: 28px 32px; margin-bottom: 20px; }
+  .verdict-label { font-size: 12px; font-weight: 800; letter-spacing: 1.5px; color: var(--accent-soft); margin-bottom: 10px; }
+  .verdict-title { font-size: 28px; font-weight: 900; letter-spacing: -0.8px; line-height: 1.3; }
+  .verdict-title em { font-style: normal; color: #FFB48F; }
+  .verdict-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
+  .verdict-row { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 12px; padding: 14px 16px; }
+  .verdict-row .k { font-size: 12px; color: #D9D2C5; font-weight: 600; }
+  .verdict-row .v { font-size: 18px; font-weight: 900; margin-top: 2px; }
+
+  .stat-card { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 22px; }
+  .stat-card.accent { background: var(--accent); color: var(--white); border-color: var(--accent); }
+  .stat-card.accent .stat-label, .stat-card.accent .stat-sub { color: #FDE6DA; }
+  .stat-card.brown { background: var(--brown); color: var(--white); border-color: var(--brown); }
+  .stat-card.brown .stat-label, .stat-card.brown .stat-sub { color: #EFE3D0; }
+  .stat-label { font-size: 12px; font-weight: 700; letter-spacing: 0.3px; color: var(--ink-mute); margin-bottom: 8px; }
+  .stat-value { font-size: 28px; font-weight: 900; letter-spacing: -1px; line-height: 1.1; }
+  .stat-sub { font-size: 13px; color: var(--ink-mute); margin-top: 6px; font-weight: 600; line-height: 1.5; }
+
+  .fast-box { margin-top: 20px; border: 1.5px dashed var(--accent); border-radius: 16px; padding: 22px 24px; background: #FBF1E9; }
+  .fast-title { font-size: 16px; font-weight: 900; margin-bottom: 6px; }
+  .fast-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+  .fast-item { background: var(--white); border-radius: 12px; padding: 14px 16px; border: 1px solid var(--border); }
+  .fast-item .k { font-size: 12px; color: var(--ink-mute); font-weight: 700; }
+  .fast-item .v { font-size: 20px; font-weight: 900; margin-top: 4px; letter-spacing: -0.5px; }
+  .fast-item .s { font-size: 12px; color: var(--ink-mute); font-weight: 600; margin-top: 2px; }
+
+  .chart-title { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; margin-bottom: 4px; }
+  .chart-subtitle { font-size: 13px; font-weight: 500; color: var(--ink-mute); margin-bottom: 18px; }
+  .chart-container { position: relative; height: 360px; width: 100%; }
+  .chart-container.sm { height: 300px; }
+
+  .table-wrap { overflow-x: auto; margin-top: 8px; border-radius: 12px; }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1000px; }
+  .data-table th { background: var(--bg-alt); padding: 10px 10px; text-align: right; font-weight: 700; color: var(--ink-soft); font-size: 11px; border-bottom: 1.5px solid var(--border); white-space: nowrap; }
+  .data-table th:first-child, .data-table td:first-child { text-align: center; }
+  .data-table th.g-a { background: var(--accent-soft); color: var(--accent); text-align: center; font-size: 12px; font-weight: 800; }
+  .data-table th.g-b { background: #E8DFC9; color: var(--brown); text-align: center; font-size: 12px; font-weight: 800; }
+  .data-table td { padding: 10px; text-align: right; border-bottom: 1px solid var(--border); font-weight: 600; white-space: nowrap; }
+  .data-table td:first-child { font-weight: 800; color: var(--accent); }
+  .data-table td.a { color: var(--accent); }
+  .data-table td.a-em { color: var(--accent); font-weight: 800; }
+  .data-table td.b { color: var(--brown); }
+  .data-table td.b-em { color: var(--brown); font-weight: 800; }
+  .data-table td.mute { color: var(--ink-mute); }
+  .data-table tr.maturity { background: #FBEDE3; }
+  .data-table tr.last td { font-weight: 800; border-bottom: 2px solid var(--accent); }
+  .table-note { font-size: 12px; color: var(--ink-mute); font-weight: 600; margin-top: 10px; line-height: 1.6; }
+
+  .mini-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .mini-table td { padding: 9px 4px; border-bottom: 1px solid var(--border); font-weight: 600; }
+  .mini-table td:last-child { text-align: right; font-weight: 800; }
+  .mini-table tr.total td { border-top: 2px solid var(--ink); border-bottom: none; font-weight: 900; font-size: 15px; }
+  .mini-table td.minus { color: var(--accent); }
+
+  .assume { font-size: 13px; color: var(--ink-soft); line-height: 1.75; font-weight: 500; }
+  .assume li { margin-left: 18px; margin-bottom: 6px; }
+  .assume strong { color: var(--ink); }
+  .assume a { color: var(--accent); }
+
+  .insight-box { background: var(--dark-warm); color: var(--white); border-radius: 20px; padding: 36px; margin-bottom: 24px; }
+  .insight-label { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+  .insight-label-text { font-size: 12px; font-weight: 800; letter-spacing: 1.5px; color: var(--accent-soft); }
+  .insight-title { font-size: 24px; font-weight: 900; margin-bottom: 16px; letter-spacing: -0.5px; line-height: 1.35; }
+  .insight-desc { font-size: 15px; line-height: 1.8; color: #D9D2C5; font-weight: 500; }
+  .insight-desc strong { color: var(--white); }
+  .insight-cta { margin-top: 28px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.12); display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .insight-cta-text { font-size: 14px; color: #D9D2C5; font-weight: 600; margin-right: 8px; }
+  .cta-link { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 700; text-decoration: none; transition: all .2s ease; }
+  .cta-link.primary { background: var(--accent); color: var(--white); }
+  .cta-link.primary:hover { background: #E66740; }
+  .cta-link.secondary { background: rgba(255,255,255,.08); color: var(--white); border: 1px solid rgba(255,255,255,.15); }
+  footer { text-align: center; font-size: 12px; color: var(--ink-mute); font-weight: 500; line-height: 1.7; padding: 16px 0 32px; }
+
+  @media (max-width: 768px) {
+    body { padding: 16px 12px; }
+    header { margin-bottom: 28px; }
+    .header-date { display: none; }
+    .hero { margin-bottom: 28px; }
+    .hero-title { font-size: 32px; letter-spacing: -1.2px; line-height: 1.2; }
+    .hero-desc { font-size: 15px; }
+    .hero-desc br { display: none; }
+    .top-cta { flex-direction: column; align-items: stretch; padding: 16px; }
+    .top-cta-links { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .card { padding: 18px 16px; margin-bottom: 20px; border-radius: 16px; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; gap: 14px; }
+    .grid-4 { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .chip { font-size: 13px; padding: 8px 11px; }
+    .verdict { padding: 22px 18px; border-radius: 16px; }
+    .verdict-title { font-size: 21px; }
+    .verdict-rows { grid-template-columns: 1fr; }
+    .stat-card { padding: 16px; border-radius: 14px; }
+    .stat-value { font-size: 21px; }
+    .stat-sub { font-size: 12px; }
+    .fast-box { padding: 18px 16px; }
+    .fast-grid { grid-template-columns: 1fr; }
+    .chart-title { font-size: 15px; }
+    .chart-container { height: 280px; }
+    .chart-container.sm { height: 260px; }
+    .table-wrap { margin: 8px -16px 0; padding: 0 16px; -webkit-overflow-scrolling: touch; }
+    .data-table { font-size: 11px; min-width: 860px; }
+    .data-table th { padding: 8px 6px; font-size: 10px; }
+    .data-table td { padding: 8px 6px; }
+    .insight-box { padding: 24px 18px; border-radius: 16px; }
+    .insight-title { font-size: 19px; }
+    .insight-cta { flex-direction: column; align-items: stretch; }
+    .cta-link { justify-content: center; }
+  }
+  @media (max-width: 380px) {
+    .hero-title { font-size: 28px; }
+    .grid-4 { grid-template-columns: 1fr; }
+    .top-cta-links { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo">
+      <div class="logo-icon">똑</div>
+      <div>
+        <div class="logo-name">똑재TV</div>
+        <div class="logo-sub">ISA STRATEGY SIMULATOR</div>
+      </div>
+    </div>
+    <div class="header-date">세법 기준일 2026-10-08</div>
+  </header>
+
+  <div class="hero">
+    <span class="tag"><span class="dot"></span>ISA 만기 전략 계산기</span>
+    <h1 class="hero-title">ISA 3년 만기,<br><span class="underline-mark">연금으로 옮길까</span> 그냥 둘까?</h1>
+    <p class="hero-desc">
+      3년마다 해지해서 연금저축으로 옮기는 전략과 ISA 하나를 끝까지 유지하는 전략을<br>
+      같은 돈·같은 수익률로 굴려 세후 자산을 연차별로 비교해 드립니다.
+    </p>
+  </div>
+
+  <div class="top-cta">
+    <div class="top-cta-text">💡 <strong>ISA·연금계좌 절세 전략</strong>이 더 궁금하신가요? 똑재TV에서 매주 만나보세요.</div>
+    <div class="top-cta-links">
+      <a href="https://www.youtube.com/@ttok_jae" target="_blank" rel="noopener" class="top-cta-link primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+        똑재TV 구독하기
+      </a>
+      <a href="https://cafe.naver.com/ttokjae" target="_blank" rel="noopener" class="top-cta-link"><span class="naver-mark">N</span>평생 ETF 투자 카페</a>
+    </div>
+  </div>
+
+  <!-- STEP 01 -->
+  <div class="card">
+    <div class="step-label"><div class="step-line"></div><span class="step-text">STEP 01 / 넣을 돈</span></div>
+    <label class="label">돈이 어떻게 들어오나요?</label>
+    <div class="chips" id="mode-chips">
+      <button class="chip on" data-v="annual">매년 저축해서 넣기<small>월급에서 매년 일정액</small></button>
+      <button class="chip" data-v="lump">목돈을 한 번에<small>이미 모아둔 돈을 옮기기</small></button>
+    </div>
+
+    <div id="annual-box" style="margin-top:20px">
+      <div class="grid-3">
+        <div class="field">
+          <label class="label">연간 납입금</label>
+          <div class="input-wrap"><input type="text" inputmode="numeric" id="annual" value="10,000,000"><span class="input-unit">원</span></div>
+          <div class="input-hint" id="annual-hint"></div>
+        </div>
+        <div class="field">
+          <label class="label">총 납입액</label>
+          <div class="input-wrap"><input type="text" inputmode="numeric" id="total" value="100,000,000"><span class="input-unit">원</span></div>
+          <div class="input-hint" id="total-hint"></div>
+        </div>
+        <div class="field">
+          <label class="label">연 수익률 (세전)</label>
+          <div class="input-wrap"><input type="text" inputmode="decimal" id="rate-a" value="8"><span class="input-unit">%</span></div>
+          <div class="input-hint">ISA·연금저축·일반계좌 모두 같은 수익률</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="lump-box" style="margin-top:20px; display:none">
+      <div class="grid-3">
+        <div class="field">
+          <label class="label">목돈</label>
+          <div class="input-wrap"><input type="text" inputmode="numeric" id="lump" value="100,000,000"><span class="input-unit">원</span></div>
+          <div class="input-hint" id="lump-hint"></div>
+        </div>
+        <div class="field">
+          <label class="label">연 수익률 (세전)</label>
+          <div class="input-wrap"><input type="text" inputmode="decimal" id="rate-l" value="8"><span class="input-unit">%</span></div>
+          <div class="input-hint">ISA에 들어가기 전 돈은 일반계좌에서 같은 수익률로 운용</div>
+        </div>
+        <div></div>
+      </div>
+      <div class="sub-box">
+        <div class="sub-title">ISA에 넣는 방식</div>
+        <div class="sub-desc">ISA 연간 한도(2,000만원)는 <strong>매년 1월 첫 영업일</strong>에 새로 생기고, 만기는 <strong>가입일부터 3년</strong>입니다. 12월에 개설하면 한 사이클이 4개 연도의 한도를 쓰고, 만기 해지 후 바로 새로 만들면 그 해 한도가 또 생깁니다.</div>
+        <div class="chips" id="sched-chips">
+          <button class="chip on" data-v="fast">12월 개설 · 연도 경계 활용<small>개설 즉시 + 1월마다 2,000만원, 만기 즉시 재가입</small></button>
+          <button class="chip" data-v="yearly">매년 1월에 한 번<small>연 2,000만원씩 (엑셀 방식)</small></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="grid-3">
+      <div class="field">
+        <label class="label">운용 기간 (마지막에 전부 찾는 시점)</label>
+        <div class="input-wrap"><input type="text" inputmode="numeric" id="horizon" value="" placeholder="자동"><span class="input-unit">년</span></div>
+        <div class="input-hint" id="horizon-hint"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 02 -->
+  <div class="card">
+    <div class="step-label"><div class="step-line"></div><span class="step-text">STEP 02 / 세금 조건</span></div>
+    <div class="grid-3">
+      <div>
+        <label class="label">ISA 유형 (비과세 한도)</label>
+        <div class="chips" id="free-chips">
+          <button class="chip on" data-v="2000000">일반형<small>200만원</small></button>
+          <button class="chip" data-v="4000000">서민·농어민형<small>400만원</small></button>
+        </div>
+      </div>
+      <div>
+        <label class="label">연금저축 세액공제율</label>
+        <div class="chips" id="credit-chips">
+          <button class="chip" data-v="0.165">16.5%<small>총급여 5,500만원 이하</small></button>
+          <button class="chip on" data-v="0.132">13.2%<small>총급여 5,500만원 초과</small></button>
+        </div>
+      </div>
+      <div>
+        <label class="label">연금 받을 나이 (연금소득세)</label>
+        <div class="chips" id="age-chips">
+          <button class="chip on" data-v="0.055">55~69세<small>5.5%</small></button>
+          <button class="chip" data-v="0.044">70~79세<small>4.4%</small></button>
+          <button class="chip" data-v="0.033">80세~<small>3.3%</small></button>
+        </div>
+      </div>
+    </div>
+    <div class="sub-box">
+      <div class="row-toggle">
+        <div>
+          <div class="sub-title">연말정산 환급액 재투자</div>
+          <div class="sub-desc" style="margin-bottom:0">ON: 환급액을 연금저축에 다시 넣어 같은 수익률로 굴립니다(원금은 비과세, 수익은 연금소득세). OFF: 받은 금액 그대로 더합니다.</div>
+        </div>
+        <label class="toggle-switch"><input type="checkbox" id="reinvest" checked><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="step-label"><div class="step-line"></div><span class="step-text">STEP 03 / 결과</span></div>
+
+  <div class="verdict">
+    <div class="verdict-label" id="v-label">RESULT</div>
+    <div class="verdict-title" id="v-title"></div>
+    <div class="verdict-rows">
+      <div class="verdict-row"><div class="k" id="v-k1">연금으로 나눠 받을 때</div><div class="v" id="v-v1"></div></div>
+      <div class="verdict-row"><div class="k" id="v-k2">한 번에 목돈으로 찾을 때</div><div class="v" id="v-v2"></div></div>
+    </div>
+  </div>
+
+  <div class="grid-4" style="margin-bottom:20px">
+    <div class="stat-card accent"><div class="stat-label">전략A · 연금으로 받기</div><div class="stat-value" id="s-ap"></div><div class="stat-sub" id="s-ap-sub"></div></div>
+    <div class="stat-card"><div class="stat-label">전략A · 한 번에 찾기 (16.5%)</div><div class="stat-value" id="s-ao" style="color:var(--accent)"></div><div class="stat-sub" id="s-ao-sub"></div></div>
+    <div class="stat-card brown"><div class="stat-label">전략B · ISA 유지</div><div class="stat-value" id="s-b"></div><div class="stat-sub" id="s-b-sub"></div></div>
+    <div class="stat-card"><div class="stat-label" id="s-paid-label">총 납입액</div><div class="stat-value" id="s-paid"></div><div class="stat-sub" id="s-paid-sub"></div></div>
+  </div>
+
+  <div class="fast-box" id="fast-box" style="display:none; margin-bottom:32px">
+    <div class="fast-title" id="fast-title"></div>
+    <div class="sub-desc" id="fast-desc" style="margin-bottom:0"></div>
+    <div class="fast-grid">
+      <div class="fast-item"><div class="k">ISA에 다 넣는 시점</div><div class="v" id="f-when"></div><div class="s" id="f-when-s"></div></div>
+      <div class="fast-item"><div class="k">전략A 세후 (연금수령)</div><div class="v" id="f-a"></div><div class="s" id="f-a-s"></div></div>
+      <div class="fast-item"><div class="k">전략B 세후</div><div class="v" id="f-b"></div><div class="s" id="f-b-s"></div></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <div class="chart-title">연차별 평가액 (세금 떼기 전)</div>
+    <div class="chart-subtitle">전략A는 ISA 잔액 + 연금저축 + 환급액, 전략B는 ISA 잔액 (+ 한도 밖 일반계좌). 마지막 해만 세금을 떼고 비교합니다.</div>
+    <div class="chart-container"><canvas id="chart-line"></canvas></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="chart-title">최종 세후 자산 비교</div>
+      <div class="chart-subtitle" id="bar-sub"></div>
+      <div class="chart-container sm"><canvas id="chart-bar"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="chart-title">세금은 어디서 얼마나 나가나</div>
+      <div class="chart-subtitle">운용 종료 시점까지 낸 세금과 받은 환급</div>
+      <table class="mini-table" id="tax-table"></table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="chart-title">연차별 상세</div>
+    <div class="chart-subtitle">색칠된 줄 = 전략A의 ISA 만기(해지 → 연금저축 이전) 시점</div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th rowspan="2">연차</th><th colspan="7" class="g-a">전략A · 3년마다 연금저축 이전</th><th colspan="3" class="g-b">전략B · ISA 유지</th><th rowspan="2">A − B</th></tr>
+          <tr><th>올해 납입</th><th>ISA 잔액</th><th>연금저축 이전액</th><th>ISA 세금</th><th>환급액</th><th>연금저축 잔액</th><th>A 평가액</th><th>ISA 잔액</th><th>일반계좌</th><th>B 평가액</th></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="table-note" id="table-note"></div>
+  </div>
+
+  <div class="card">
+    <div class="chart-title">계산 가정</div>
+    <div class="chart-subtitle">현행 세법 기준 (2026-10-08 확인)</div>
+    <ul class="assume">
+      <li><strong>ISA 비과세·분리과세</strong>: 순이익 중 일반형 200만원·서민/농어민형 400만원까지 비과세, 초과분 9.9%(지방소득세 포함) 분리과세. 연 납입 2,000만원(미사용분 이월), 계좌당 총 1억원.</li>
+      <li><strong>연금 전환 세액공제</strong>: ISA 만기 후 60일 이내 연금계좌로 옮기면 전환금액의 10%(최대 300만원)를 기존 세액공제 한도에 더해 공제. 환급액은 이전한 해에 받는 것으로 단순화했습니다(실제로는 다음 해 연말정산).</li>
+      <li><strong>연금저축 과세</strong>: 세액공제 안 받은 원금은 비과세, 세액공제 받은 원금과 운용수익은 연금으로 받으면 연금소득세(55~69세 5.5%, 70~79세 4.4%, 80세~ 3.3%), 연금 외로 한 번에 찾으면 기타소득세 16.5%.</li>
+      <li><strong>연금 수령 한도</strong>: 사적연금을 연 1,500만원 넘게 받으면 그 해 전체를 종합과세하거나 16.5% 분리과세 중 고릅니다. 이 계산은 1,500만원 이하로 나눠 받는다고 보고 연금소득세율을 적용합니다. 55세 이후·가입 5년 경과 등 연금수령 요건은 충족한다고 가정합니다.</li>
+      <li><strong>전략B</strong>: ISA 하나를 끝까지 유지하고 운용 종료 시점에 해지합니다. 총 납입 1억원을 넘는 돈은 일반계좌에 둡니다.</li>
+      <li><strong>일반계좌</strong>(목돈 대기자금·B의 한도 초과분): 같은 수익률로 운용하고, 이익을 실현할 때 15.4% 과세(국내상장 해외 ETF 기준). 금융소득종합과세·건강보험료는 반영하지 않았습니다.</li>
+      <li><strong>그 밖에 빠진 것</strong>: 매매 수수료·ETF 보수, 수익률 변동, 중도 인출, 연금 수령 기간 중 운용수익. 매년 같은 수익률이 나온다고 가정한 단순 비교입니다.</li>
+      <li>2026년 8월 세제개편안에 있던 일반 ISA 계약기간 5년 제한·납입한도 이월 폐지는 9월 1일 정부안 확정 때 철회되어, 현행 제도를 기준으로 계산합니다.</li>
+    </ul>
+  </div>
+
+  <div class="insight-box">
+    <div class="insight-label">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D9542B" stroke-width="2"><path d="M12 3l1.9 5.8L20 10l-4.5 3.3L17 20l-5-3.5L7 20l1.5-6.7L4 10l6.1-1.2L12 3z"/></svg>
+      <span class="insight-label-text">KEY INSIGHT</span>
+    </div>
+    <h3 class="insight-title" id="insight-title"></h3>
+    <p class="insight-desc" id="insight-desc"></p>
+    <div class="insight-cta">
+      <div class="insight-cta-text">📊 ISA·연금계좌를 어떤 순서로 채울지, 더 알고 싶다면?</div>
+      <a href="https://www.youtube.com/@ttok_jae" target="_blank" rel="noopener" class="cta-link primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+        똑재TV 구독하기
+      </a>
+      <a href="https://cafe.naver.com/ttokjae" target="_blank" rel="noopener" class="cta-link secondary"><span class="naver-mark">N</span>평생 ETF 투자 카페 가입</a>
+    </div>
+  </div>
+
+  <footer>
+    ※ 본 계산기는 매년 같은 수익률을 가정한 단순 비교 도구이며, 수수료·보수와 금융소득종합과세·건강보험료는 반영하지 않았습니다.<br>
+    세법은 바뀔 수 있으니 실제 해지·이전 전에 증권사와 국세청 안내를 확인하세요. 투자 판단과 책임은 본인에게 있습니다.
+  </footer>
+</div>
+
+<script>
+/* ISA 만기 전략 계산 엔진 (브라우저·Node 공용)
+ * 전략A: ISA 3년 만기마다 해지 → 세후금액을 연금저축으로 이전(전환금액 10%, 최대 300만원 추가 세액공제) → 즉시 새 ISA
+ * 전략B: ISA 하나를 해지 없이 유지(총 납입 1억 한도), 운용 종료 시점에 해지
+ * 시간 단위: 월. 수익률은 월 복리((1+r)^(1/12))로 환산해 연 단위 결과가 엑셀과 같게 맞춘다.
+ */
+(function (root) {
+  const ISA_YEAR_LIMIT = 20000000;   // ISA 연간 납입한도 (달력 연도 기준, 미사용분 이월)
+  const ISA_TOTAL_LIMIT = 100000000; // ISA 계좌당 총 납입한도
+  const TRANSFER_CREDIT_CAP = 3000000; // 연금 전환 추가 세액공제 대상 상한 (전환금액의 10%, 최대 300만원)
+
+  function buildSchedule(p) {
+    // 반환: { a: [{m, amt}], b: [{m, amt}] } — 월 단위 납입 시점
+    // annual 모드: 현금이 매년 초 들어온다 → 두 전략 모두 들어오는 즉시 납입(B는 1억 초과분 일반계좌)
+    // lump 모드: 목돈이 처음부터 있다 → 한도가 허락하는 시점에 납입, 나머지는 일반계좌에서 대기
+    const a = [], b = [];
+    if (p.mode === 'annual') {
+      let left = p.total;
+      for (let k = 0; left > 0.5 && k < 60; k++) {
+        const amt = Math.min(p.annual, left);
+        a.push({ m: 12 * k, amt }); b.push({ m: 12 * k, amt });
+        left -= amt;
+      }
+      return { a, b, cash: 'flow' };
+    }
+    // lump: 납입 '기회'만 만든다 (실제 금액은 대기자금 잔액으로 결정)
+    const horizonM = 12 * 60;
+    if (p.schedule === 'fast') {
+      // 12월 개설 → 다음 해 1월에 새 연도 한도 → 만기(가입 후 36개월, 12월) 해지 즉시 재가입하면 그 해 한도가 새로 생김
+      for (let c = 0; c * 36 < horizonM; c++) {
+        const s = c * 36;
+        [s, s + 1, s + 13, s + 25].forEach(m => a.push({ m, cap: ISA_YEAR_LIMIT }));
+      }
+      [0, 1, 13, 25, 37].forEach(m => b.push({ m, cap: ISA_YEAR_LIMIT }));
+    } else {
+      // 매년 1월 1회 납입 (엑셀 방식)
+      for (let k = 0; k < 60; k++) { a.push({ m: 12 * k, cap: ISA_YEAR_LIMIT }); }
+      for (let k = 0; k < 5; k++) { b.push({ m: 12 * k, cap: ISA_YEAR_LIMIT }); }
+    }
+    return { a, b, cash: 'lump' };
+  }
+
+  // 일반계좌(대기자금·초과분): 가치 v, 취득원가 c. 매도 시 이익 비율만큼 과세
+  function genSell(g, net, tax) {
+    if (g.v <= 0) return 0;
+    const f = Math.max(g.v - g.c, 0) / g.v;
+    const gross = net / (1 - f * tax);
+    const s = Math.min(gross, g.v);
+    const got = s * (1 - f * tax);
+    g.c -= s * (g.c / g.v); g.v -= s;
+    if (g.v < 1) { g.v = 0; g.c = 0; }
+    return got;
+  }
+  function genValueAfterTax(g, tax) { return g.v - Math.max(g.v - g.c, 0) * tax; }
+
+  function simulate(p) {
+    const P = Object.assign({
+      mode: 'annual', annual: 10000000, total: 100000000, lump: 100000000,
+      schedule: 'yearly', r: 0.08, freeLimit: 2000000, isaTax: 0.099,
+      creditRate: 0.132, pensionRate: 0.055, otherRate: 0.165, genTax: 0.154,
+      reinvest: true, horizon: 0, excelRefund: false,
+    }, p || {});
+    const g1 = Math.pow(1 + P.r, 1 / 12);
+    const sch = buildSchedule(P);
+
+    // 최소 운용기간: A의 마지막 납입이 들어간 ISA 사이클이 만기되는 시점(3의 배수 년)
+    // lump 모드에서는 먼저 납입 소진 시점을 알아야 하므로 1차로 넉넉히 돌려 계산
+    const s = runCore(P, g1, sch, 12 * 60, true);
+    const lastA = s.lastDepositA, lastB = s.lastDepositB;
+    const minYears = Math.max(Math.ceil((Math.floor(lastA / 36) + 1) * 3), Math.ceil((lastB + 1) / 12));
+    const H = Math.max(minYears, Math.round(P.horizon || 0), 1);
+    const res = runCore(P, g1, sch, 12 * H, false);
+    res.minYears = minYears; res.H = H;
+    return res;
+  }
+
+  function runCore(P, g1, sch, endM, probe) {
+    const A = { isa: 0, isaPrin: 0, pen: 0, penFree: 0, refundPot: 0, refundPotPrin: 0, refundCash: 0,
+      gen: { v: 0, c: 0 }, cycleOpen: 0, paid: 0, transfers: [] };
+    const B = { isa: 0, isaPrin: 0, gen: { v: 0, c: 0 }, paid: 0 };
+    if (sch.cash === 'lump') { A.gen.v = A.gen.c = P.lump; B.gen.v = B.gen.c = P.lump; }
+    const da = new Map(), db = new Map();
+    sch.a.forEach(e => da.set(e.m, e)); sch.b.forEach(e => db.set(e.m, e));
+    let lastDepositA = -1, lastDepositB = -1;
+    const years = [];
+    let yr = { a: {}, b: {} };
+    const resetYr = () => { yr = { tr: 0, isaTaxA: 0, creditBase: 0, refund: 0, depA: 0, depB: 0 }; };
+    resetYr();
+
+    for (let m = 0; m <= endM; m++) {
+      // (1) 전략A: 만기(36개월마다) 해지 → 연금저축 이전
+      if (m > 0 && m % 36 === 0 && A.isa > 0.5) {
+        const gain = A.isa - A.isaPrin;
+        const tax = Math.max(gain - P.freeLimit, 0) * P.isaTax;
+        const tr = A.isa - tax;
+        const base = Math.min(tr * 0.1, TRANSFER_CREDIT_CAP);
+        const refund = base * P.creditRate;
+        A.pen += tr; A.penFree += tr - base;
+        if (P.reinvest) {
+          A.refundPot += refund; A.refundPotPrin += refund;
+        } else A.refundCash += refund;
+        A.transfers.push({ m, tr, tax, base, refund });
+        yr.tr += tr; yr.isaTaxA += tax; yr.creditBase += base; yr.refund += refund;
+        A.isa = 0; A.isaPrin = 0; A.cycleOpen = m;
+      }
+      // (2) 연말 스냅샷
+      if (m > 0 && m % 12 === 0 && !probe) {
+        years.push({
+          year: m / 12,
+          aIsa: A.isa, aIsaPrin: A.isaPrin, aPen: A.pen, aRefund: A.refundPot + A.refundCash, aGen: A.gen.v,
+          aTotal: A.isa + A.pen + A.refundPot + A.refundCash + A.gen.v,
+          aPaid: A.paid,
+          bIsa: B.isa, bIsaPrin: B.isaPrin, bGen: B.gen.v, bTotal: B.isa + B.gen.v, bPaid: B.paid,
+          tr: yr.tr, isaTaxA: yr.isaTaxA, creditBase: yr.creditBase, refund: yr.refund,
+          depA: yr.depA, depB: yr.depB,
+        });
+        resetYr();
+      }
+      if (m === endM) break;
+      // (3) 납입
+      const ea = da.get(m);
+      if (ea) {
+        let amt;
+        if (sch.cash === 'flow') amt = ea.amt;
+        else amt = A.gen.v > 0.5 ? genSell(A.gen, Math.min(ea.cap, ISA_TOTAL_LIMIT - A.isaPrin, genValueAfterTax(A.gen, P.genTax)), P.genTax) : 0;
+        if (amt > 0.5) { A.isa += amt; A.isaPrin += amt; A.paid += amt; yr.depA += amt; lastDepositA = m; }
+      }
+      const eb = db.get(m);
+      if (eb) {
+        if (sch.cash === 'flow') {
+          const room = Math.max(ISA_TOTAL_LIMIT - B.isaPrin, 0);
+          const inIsa = Math.min(eb.amt, room);
+          if (inIsa > 0.5) { B.isa += inIsa; B.isaPrin += inIsa; lastDepositB = m; }
+          const out = eb.amt - inIsa;
+          if (out > 0.5) { B.gen.v += out; B.gen.c += out; }
+          B.paid += eb.amt; yr.depB += eb.amt;
+        } else if (B.gen.v > 0.5) {
+          const room = Math.max(ISA_TOTAL_LIMIT - B.isaPrin, 0);
+          const amt = room > 0.5 ? genSell(B.gen, Math.min(eb.cap, room, genValueAfterTax(B.gen, P.genTax)), P.genTax) : 0;
+          if (amt > 0.5) { B.isa += amt; B.isaPrin += amt; B.paid += amt; yr.depB += amt; lastDepositB = m; }
+        }
+      }
+      // (4) 한 달 운용
+      A.isa *= g1; A.pen *= g1; if (P.reinvest) A.refundPot *= g1; A.gen.v *= g1;
+      B.isa *= g1; B.gen.v *= g1;
+    }
+
+    if (probe) return { lastDepositA, lastDepositB };
+
+    // 최종 세후 (운용 종료 시점에 모두 찾는다고 가정)
+    // 환급 재투자분: 연금저축에 세액공제 안 받은 납입으로 넣은 것으로 보고 원금 비과세·수익만 과세
+    // (excelRefund=true면 엑셀처럼 재투자분 전체 비과세)
+    const potGain = Math.max(A.refundPot - A.refundPotPrin, 0);
+    const penTaxable = Math.max(A.pen - A.penFree, 0);
+    const genA = genValueAfterTax(A.gen, P.genTax);
+    const refundPensionTax = P.excelRefund ? 0 : potGain * P.pensionRate;
+    const refundOtherTax = P.excelRefund ? 0 : potGain * P.otherRate;
+    const aPension = A.penFree + penTaxable * (1 - P.pensionRate) + A.refundPot - refundPensionTax + A.refundCash + genA;
+    const aOther = A.penFree + penTaxable * (1 - P.otherRate) + A.refundPot - refundOtherTax + A.refundCash + genA;
+    const bGain = B.isa - B.isaPrin;
+    const bIsaTax = Math.max(bGain - P.freeLimit, 0) * P.isaTax;
+    const bGenAfter = genValueAfterTax(B.gen, P.genTax);
+    const bFinal = B.isa - bIsaTax + bGenAfter;
+    const totalRefund = A.transfers.reduce((s, t) => s + t.refund, 0);
+    return {
+      years, transfers: A.transfers,
+      final: {
+        aPension, aOther, b: bFinal,
+        aPen: A.pen, aPenFree: A.penFree, aPenTaxable: penTaxable,
+        aPensionTax: penTaxable * P.pensionRate + refundPensionTax, aOtherTax: penTaxable * P.otherRate + refundOtherTax,
+        aRefundValue: A.refundPot + A.refundCash, totalRefund,
+        aIsaTax: A.transfers.reduce((s, t) => s + t.tax, 0),
+        bIsa: B.isa, bIsaPrin: B.isaPrin, bIsaTax, bGen: B.gen.v, bGenAfter,
+        paid: A.paid,
+      },
+      lastDepositA, lastDepositB,
+      fullyInA: lastDepositA, fullyInB: lastDepositB,
+    };
+  }
+
+  const api = { simulate, ISA_YEAR_LIMIT, ISA_TOTAL_LIMIT, TRANSFER_CREDIT_CAP };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.IsaEngine = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const state = { mode: 'annual', schedule: 'fast', freeLimit: 2000000, creditRate: 0.132, pensionRate: 0.055 };
+  let lineChart = null, barChart = null;
+
+  // ---------- 포맷 ----------
+  function fmt(n) { // 카드용: 1.79억 / 4,092만
+    const a = Math.abs(n), s = n < 0 ? '-' : '';
+    if (a >= 1e8) return s + (a / 1e8).toFixed(2) + '억';
+    if (a >= 1e4) return s + Math.round(a / 1e4).toLocaleString() + '만';
+    return s + Math.round(a).toLocaleString();
+  }
+  function fmtLong(n) { // 1억 7,895만원
+    const a = Math.abs(n), s = n < 0 ? '-' : '';
+    const man = Math.round(a / 1e4);
+    const eok = Math.floor(man / 1e4), rest = man % 1e4;
+    if (eok > 0) return s + eok + '억' + (rest > 0 ? ' ' + rest.toLocaleString() + '만원' : '원');
+    return s + man.toLocaleString() + '만원';
+  }
+  function axisFmt(v) { // 축 눈금: 짧게
+    if (v === 0) return '0';
+    if (Math.abs(v) >= 1e8) return (v / 1e8).toFixed(1).replace(/\.0$/, '') + '억';
+    return Math.round(v / 1e4).toLocaleString() + '만';
+  }
+  function fmtWon(n) { return Math.round(n).toLocaleString() + '원'; }
+  function fmtT(n) { if (!n || Math.abs(n) < 1) return '<span style="color:#C4B8A3">–</span>'; return fmt(n); }
+  function num(id) { return Number(String($(id).value).replace(/[^0-9.]/g, '')) || 0; }
+  function monthLabel(m) { // m: 개월 (0 = 시작)
+    const y = Math.floor(m / 12), mm = m % 12;
+    if (mm === 0) return y === 0 ? '처음' : y + '년차 초';
+    return y + '년 ' + mm + '개월';
+  }
+
+  // ---------- 입력 ----------
+  function bindMoney(id, hintId, hintFn) {
+    const el = $(id);
+    const upd = () => {
+      const v = num(id);
+      el.value = v ? v.toLocaleString() : '';
+      if (hintId) $(hintId).innerHTML = hintFn(v);
+      run();
+    };
+    el.addEventListener('input', () => {
+      const pos = el.value.length - el.selectionStart;
+      const v = num(id);
+      el.value = v ? v.toLocaleString() : '';
+      try { el.setSelectionRange(el.value.length - pos, el.value.length - pos); } catch (e) {}
+      if (hintId) $(hintId).innerHTML = hintFn(v);
+      run();
+    });
+    if (hintId) $(hintId).innerHTML = hintFn(num(id));
+  }
+  bindMoney('annual', 'annual-hint', v => v > 20000000 ? '<span style="color:#D9542B">ISA 연간 한도는 2,000만원 → 2,000만원으로 계산</span>' : (v ? fmtLong(v) + ' (월 ' + fmtLong(v / 12) + ')' : ''));
+  bindMoney('total', 'total-hint', v => v ? fmtLong(v) + (num('annual') ? ' · ' + Math.ceil(v / Math.min(num('annual') || 1, 20000000)) + '년 납입' : '') : '');
+  bindMoney('lump', 'lump-hint', v => v ? fmtLong(v) + (v > 1e8 ? ' · 전략B는 1억까지만 ISA, 나머지는 일반계좌' : '') : '');
+  ['rate-a', 'rate-l', 'horizon'].forEach(id => $(id).addEventListener('input', () => {
+    if (id === 'rate-a') $('rate-l').value = $('rate-a').value;
+    if (id === 'rate-l') $('rate-a').value = $('rate-l').value;
+    run();
+  }));
+  $('reinvest').addEventListener('change', run);
+
+  function chipGroup(id, key, cast) {
+    $(id).querySelectorAll('.chip').forEach(b => b.addEventListener('click', () => {
+      $(id).querySelectorAll('.chip').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      state[key] = cast ? cast(b.dataset.v) : b.dataset.v;
+      if (key === 'mode') {
+        $('annual-box').style.display = state.mode === 'annual' ? '' : 'none';
+        $('lump-box').style.display = state.mode === 'lump' ? '' : 'none';
+        $('horizon').value = '';
+      }
+      run();
+    }));
+  }
+  chipGroup('mode-chips', 'mode');
+  chipGroup('sched-chips', 'schedule');
+  chipGroup('free-chips', 'freeLimit', Number);
+  chipGroup('credit-chips', 'creditRate', Number);
+  chipGroup('age-chips', 'pensionRate', Number);
+
+  function params(extra) {
+    const r = (num(state.mode === 'annual' ? 'rate-a' : 'rate-l')) / 100;
+    return Object.assign({
+      mode: state.mode,
+      annual: Math.min(num('annual'), 20000000), total: num('total'), lump: num('lump'),
+      schedule: state.schedule, r,
+      freeLimit: state.freeLimit, creditRate: state.creditRate, pensionRate: state.pensionRate,
+      reinvest: $('reinvest').checked, horizon: num('horizon'),
+    }, extra || {});
+  }
+
+  // ---------- 계산 & 렌더 ----------
+  function run() {
+    const base = params();
+    if ((base.mode === 'annual' && (base.annual <= 0 || base.total <= 0)) || (base.mode === 'lump' && base.lump <= 0)) return;
+    if (base.r < 0 || base.r > 0.5) return;
+
+    let res, alt = null;
+    if (base.mode === 'lump') {
+      // 두 방식 모두 같은 기간으로 맞춰 비교
+      const other = state.schedule === 'fast' ? 'yearly' : 'fast';
+      const p1 = IsaEngine.simulate(Object.assign({}, base, { horizon: 0 }));
+      const p2 = IsaEngine.simulate(Object.assign({}, base, { schedule: other, horizon: 0 }));
+      const minH = Math.max(p1.minYears, p2.minYears);
+      const H = Math.max(minH, base.horizon || 0);
+      res = IsaEngine.simulate(Object.assign({}, base, { horizon: H }));
+      alt = IsaEngine.simulate(Object.assign({}, base, { schedule: other, horizon: H }));
+      res.minShown = minH;
+    } else {
+      res = IsaEngine.simulate(base);
+      res.minShown = res.minYears;
+    }
+    const H = res.H, f = res.final;
+
+    // 운용기간 힌트
+    const userH = num('horizon');
+    $('horizon-hint').className = 'input-hint' + (userH && userH < res.minShown ? ' warn' : '');
+    $('horizon-hint').textContent = userH && userH < res.minShown
+      ? '최소 ' + res.minShown + '년(마지막 ISA 만기)이라 ' + res.minShown + '년으로 계산'
+      : (userH ? H + '년 뒤 전부 찾는다고 계산' : '자동: ' + H + '년 (마지막으로 넣은 ISA가 만기되는 해). 더 길게 입력 가능');
+
+    // 판정
+    const d1 = f.aPension - f.b, d2 = f.aOther - f.b;
+    let title;
+    if (d1 > 0 && d2 > 0) title = '어떻게 찾든 <em>전략A(연금 이전)</em>가 유리합니다';
+    else if (d1 > 0 && d2 <= 0) title = '연금으로 받으면 <em>전략A</em>, 목돈으로 찾으면 <em>전략B</em>가 유리합니다';
+    else title = '이 조건에서는 <em>전략B(ISA 유지)</em>가 유리합니다';
+    $('v-label').textContent = H + '년 뒤 세후 자산 기준';
+    $('v-title').innerHTML = title;
+    $('v-v1').textContent = (d1 >= 0 ? '전략A +' : '전략B +') + fmtLong(Math.abs(d1));
+    $('v-v2').textContent = (d2 >= 0 ? '전략A +' : '전략B +') + fmtLong(Math.abs(d2));
+
+    // 카드
+    $('s-ap').textContent = fmt(f.aPension);
+    $('s-ap-sub').textContent = '연금소득세 ' + (state.pensionRate * 100).toFixed(1) + '% · ' + fmtWon(f.aPension);
+    $('s-ao').textContent = fmt(f.aOther);
+    $('s-ao-sub').textContent = '기타소득세 16.5% · ' + fmtWon(f.aOther);
+    $('s-b').textContent = fmt(f.b);
+    $('s-b-sub').textContent = 'ISA 해지 시 9.9% 분리과세' + (f.bGen > 1 ? ' · 일반계좌 ' + fmt(f.bGenAfter) + ' 포함' : '') + ' · ' + fmtWon(f.b);
+    $('s-paid-label').textContent = state.mode === 'lump' ? '전략A가 ISA에 넣은 돈' : '총 납입액';
+    $('s-paid').textContent = fmt(f.paid);
+    $('s-paid-sub').textContent = (state.mode === 'lump' ? '목돈 + 기다리는 동안 불어난 돈(세후) · ' : '') + 'ISA 이전 ' + res.transfers.length + '회 · 세액공제 환급 ' + fmt(f.totalRefund);
+
+    // 연도 경계 효과 박스
+    if (alt) {
+      const fast = state.schedule === 'fast' ? res : alt, slow = state.schedule === 'fast' ? alt : res;
+      $('fast-box').style.display = '';
+      $('fast-title').textContent = '12월 개설·만기 즉시 재가입 vs 매년 1월 한 번 (같은 ' + H + '년 기준)';
+      const gainA = fast.final.aPension - slow.final.aPension, gainB = fast.final.b - slow.final.b;
+      $('fast-desc').innerHTML = '같은 목돈을 ISA에 얼마나 빨리 옮기느냐의 차이입니다. 빨리 옮길수록 일반계좌에서 15.4% 과세되는 기간이 줄어듭니다. '
+        + (base.lump > 1e8 ? '1억원을 넘는 목돈이면 ISA를 갈아타는 전략A만 한도가 계속 새로 생겨 차이가 커집니다.' : '');
+      $('f-when').textContent = monthLabel(fast.lastDepositA).replace('년차 초', '년') + ' vs ' + monthLabel(slow.lastDepositA).replace('년차 초', '년');
+      $('f-when-s').textContent = '전략A 기준 (연도 경계 활용 vs 매년 1월)';
+      $('f-a').textContent = (gainA >= 0 ? '+' : '') + fmtLong(gainA);
+      $('f-a-s').textContent = fmt(fast.final.aPension) + ' vs ' + fmt(slow.final.aPension);
+      $('f-b').textContent = (gainB >= 0 ? '+' : '') + fmtLong(gainB);
+      $('f-b-s').textContent = fmt(fast.final.b) + ' vs ' + fmt(slow.final.b);
+    } else $('fast-box').style.display = 'none';
+
+    renderTable(res);
+    renderTax(res);
+    renderCharts(res);
+    renderInsight(res, d1, d2);
+  }
+
+  function renderTable(res) {
+    const rows = res.years.map((y, i) => {
+      const isMat = y.tr > 0, isLast = i === res.years.length - 1;
+      const diff = y.aTotal - y.bTotal;
+      return '<tr class="' + (isMat ? 'maturity ' : '') + (isLast ? 'last' : '') + '">'
+        + '<td>' + y.year + '년' + (isMat ? ' ★' : '') + '</td>'
+        + '<td class="mute">' + fmtT(y.depA) + '</td>'
+        + '<td class="a">' + fmtT(y.aIsa) + '</td>'
+        + '<td class="a">' + fmtT(y.tr) + '</td>'
+        + '<td class="mute">' + fmtT(y.isaTaxA) + '</td>'
+        + '<td class="a">' + fmtT(y.refund) + '</td>'
+        + '<td class="a">' + fmtT(y.aPen) + '</td>'
+        + '<td class="a-em">' + fmt(y.aTotal) + '</td>'
+        + '<td class="b">' + fmtT(y.bIsa) + '</td>'
+        + '<td class="b">' + fmtT(y.bGen) + '</td>'
+        + '<td class="b-em">' + fmt(y.bTotal) + '</td>'
+        + '<td class="' + (diff >= 0 ? 'a-em' : 'b-em') + '">' + (diff >= 0 ? '+' : '') + fmt(diff) + '</td></tr>';
+    }).join('');
+    $('tbody').innerHTML = rows;
+    const p = params();
+    $('table-note').innerHTML = '평가액은 세금 떼기 전 금액입니다. A 평가액 = ISA 잔액 + 연금저축 잔액 + 환급액' + (p.mode === 'lump' ? ' + 아직 ISA에 못 넣은 일반계좌 대기자금' : '')
+      + '. ★ 해에 ISA를 해지해 세금(비과세 한도 초과분 9.9%)을 내고 남은 돈을 연금저축으로 옮긴 뒤 바로 새 ISA를 시작합니다.';
+  }
+
+  function renderTax(res) {
+    const f = res.final;
+    const rows = [
+      ['<b style="color:var(--accent)">전략A</b> 사이클마다 낸 ISA 세금 (' + res.transfers.length + '회)', -f.aIsaTax],
+      ['연금 전환 세액공제 환급', f.totalRefund],
+      ['연금으로 받을 때 연금소득세 (' + (state.pensionRate * 100).toFixed(1) + '%)', -f.aPensionTax],
+      ['└ 과세 대상 (공제받은 원금+수익)', null, fmt(f.aPenTaxable)],
+      ['<b style="color:var(--brown)">전략B</b> 해지할 때 ISA 세금 (9.9%)', -f.bIsaTax],
+    ];
+    if (f.bGen > 1) rows.push(['전략B 한도 밖 일반계좌 세금 (15.4%)', -(f.bGen - f.bGenAfter)]);
+    const netA = -f.aIsaTax + f.totalRefund - f.aPensionTax;
+    const netB = -f.bIsaTax - (f.bGen - f.bGenAfter);
+    $('tax-table').innerHTML = rows.map(r => '<tr><td>' + r[0] + '</td><td class="' + (r[1] < 0 ? 'minus' : '') + '">'
+      + (r[1] === null ? r[2] : (r[1] < 0 ? '−' : '+') + fmtLong(Math.abs(r[1]))) + '</td></tr>').join('')
+      + '<tr class="total"><td>세금 − 환급 (A 연금수령 / B)</td><td>' + fmt(-netA) + ' / ' + fmt(-netB) + '</td></tr>';
+  }
+
+  const endLabelPlugin = {
+    id: 'endLabel',
+    afterDatasetsDraw(chart) {
+      const { ctx } = chart; ctx.save();
+      const labels = [];
+      chart.data.datasets.forEach((ds, i) => {
+        const meta = chart.getDatasetMeta(i); if (meta.hidden) return;
+        const p = meta.data[ds.data.length - 1]; if (!p) return;
+        labels.push({ x: p.x, y: p.y, color: ds._endLabelColor || ds.borderColor, text: ds._short || ds.label, value: ds.data[ds.data.length - 1] });
+      });
+      labels.sort((a, b) => a.y - b.y);
+      for (let i = 1; i < labels.length; i++) if (labels[i].y - labels[i - 1].y < 20) labels[i].y = labels[i - 1].y + 20;
+      const mobile = window.innerWidth < 768, fs = mobile ? 10 : 11;
+      labels.forEach(l => {
+        ctx.font = '700 ' + fs + 'px Pretendard, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        const text = l.text + ' ' + fmt(l.value);
+        const w = ctx.measureText(text).width, px = mobile ? 5 : 8, py = 4;
+        const bx = l.x + 6, bh = fs + py * 2, by = l.y - bh / 2, bw = w + px * 2;
+        ctx.fillStyle = '#FBF7F0'; ctx.strokeStyle = l.color; ctx.lineWidth = 1.5;
+        ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(bx, by, bw, bh, 4); else ctx.rect(bx, by, bw, bh); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = l.color; ctx.fillText(text, bx + px, l.y);
+      });
+      ctx.restore();
+    }
+  };
+
+  const tooltipBase = {
+    backgroundColor: '#FBF7F0', titleColor: '#1A1A1A', bodyColor: '#3A2F26', borderColor: '#D9542B', borderWidth: 1.5, padding: 14,
+    titleFont: { family: 'Pretendard', size: 14, weight: 800 }, bodyFont: { family: 'Pretendard', size: 13, weight: 600 },
+    bodySpacing: 8, titleMarginBottom: 10, cornerRadius: 10, usePointStyle: true, boxPadding: 6,
+  };
+
+  function renderCharts(res) {
+    const labels = res.years.map(y => y.year + '년');
+    const lumpMode = state.mode === 'lump';
+    const paid = lumpMode ? res.years.map(() => num('lump')) : res.years.map(y => Math.max(y.aPaid, y.bPaid));
+    const mobile = window.innerWidth < 768;
+    const ds = [
+      { label: '전략A 연금 이전', _short: 'A', data: res.years.map(y => y.aTotal), borderColor: '#D9542B', backgroundColor: '#D9542B', borderWidth: 3, pointRadius: res.years.map(y => y.tr > 0 ? 4 : 0), tension: 0.15 },
+      { label: '전략B ISA 유지', _short: 'B', data: res.years.map(y => y.bTotal), borderColor: '#8B6F47', backgroundColor: '#8B6F47', borderWidth: 3, pointRadius: 0, tension: 0.15 },
+      { label: lumpMode ? '처음 목돈' : '납입 원금', _short: lumpMode ? '목돈' : '원금', data: paid, borderColor: '#9B9387', backgroundColor: '#9B9387', borderWidth: 2, borderDash: [5, 5], pointRadius: 0 },
+    ];
+    if (lineChart) lineChart.destroy();
+    lineChart = new Chart($('chart-line'), {
+      type: 'line', data: { labels, datasets: ds },
+      options: {
+        responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+        layout: { padding: { right: mobile ? 92 : 130, top: 10, left: 4 } },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { family: 'Pretendard', weight: 600 }, color: '#8B8276', maxRotation: 0, autoSkip: true } },
+          y: { grid: { color: '#EAE1CF' }, ticks: { font: { family: 'Pretendard', weight: 600 }, color: '#8B8276', callback: v => axisFmt(v) } },
+        },
+        plugins: {
+          legend: { display: true, position: 'top', align: 'start', labels: { font: { family: 'Pretendard', size: 12, weight: 700 }, color: '#1A1A1A', usePointStyle: true, padding: 14, boxHeight: 6 } },
+          datalabels: { display: false },
+          tooltip: Object.assign({}, tooltipBase, { mode: 'index', intersect: false, itemSort: (a, b) => b.parsed.y - a.parsed.y,
+            callbacks: { title: it => it[0].label + ' 말', label: c => '  ' + c.dataset.label + ': ' + fmtLong(c.parsed.y) } }),
+        },
+      },
+      plugins: [endLabelPlugin],
+    });
+
+    const f = res.final;
+    $('bar-sub').textContent = res.H + '년 뒤 전부 찾을 때, 세금을 뗀 금액';
+    if (barChart) barChart.destroy();
+    barChart = new Chart($('chart-bar'), {
+      type: 'bar',
+      data: { labels: ['A 연금수령', 'A 일시수령', 'B ISA 유지'],
+        datasets: [{ data: [f.aPension, f.aOther, f.b], backgroundColor: ['#D9542B', '#E89A6F', '#8B6F47'], borderRadius: 8, maxBarThickness: 72 }] },
+      options: {
+        responsive: true, maintainAspectRatio: false, layout: { padding: { top: 28 } },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { family: 'Pretendard', size: 12, weight: 700 }, color: '#1A1A1A' } },
+          y: { display: false, min: Math.min(f.aPension, f.aOther, f.b) * 0.9 },
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: Object.assign({}, tooltipBase, { callbacks: { label: c => '  ' + fmtWon(c.parsed.y) } }),
+          datalabels: { anchor: 'end', align: 'top', color: '#3A2F26', font: { family: 'Pretendard', size: 13, weight: 800 }, formatter: v => fmt(v) },
+        },
+      },
+      plugins: [ChartDataLabels],
+    });
+  }
+
+  function renderInsight(res, d1, d2) {
+    const f = res.final, n = res.transfers.length, H = res.H;
+    let title, desc;
+    const rate = (state.pensionRate * 100).toFixed(1);
+    if (d1 > 0) {
+      title = d2 > 0
+        ? '3년마다 갈아타면 비과세 한도가 ' + n + '번 새로 생깁니다. 이 조건에선 목돈으로 찾아도 A가 앞섭니다.'
+        : '연금으로 받을 계획이면 갈아타기(A), 목돈이 필요하면 유지(B)입니다.';
+      desc = '전략A는 ISA를 ' + n + '번 해지하면서 사이클마다 <strong>비과세 ' + fmt(state.freeLimit) + '원</strong>을 새로 쓰고, 옮길 때마다 <strong>세액공제 환급(총 ' + fmt(f.totalRefund) + '원)</strong>을 받습니다. '
+        + '대신 연금저축으로 옮긴 돈은 나중에 찾을 때 과세됩니다. 연금으로 나눠 받으면 ' + rate + '%라서 ISA의 9.9%보다 가볍지만, '
+        + '55세 전에 깨거나 한 번에 찾으면 <strong>16.5%</strong>가 붙습니다. '
+        + (d2 > 0 ? '이 조건에서는 16.5%를 내도 A가 앞서지만, 차이는 ' + fmtLong(d2) + '로 줄어듭니다.' : '그래서 한 번에 찾으면 B가 ' + fmtLong(-d2) + ' 앞섭니다.')
+        + ' 결국 <strong>이 돈을 노후 연금으로 쓸 것인가</strong>가 판단 기준입니다.';
+    } else {
+      title = '이 조건에서는 ISA를 그대로 두는 쪽(B)이 앞섭니다.';
+      desc = 'ISA를 해지해 옮길 때마다 비과세 한도 초과분에 9.9%를 내고, 연금저축의 과세 대상도 커집니다. 수익률이 낮거나 기간이 짧으면 갈아타서 얻는 비과세·환급 효과보다 세금 부담이 더 클 수 있습니다. '
+        + '수익률·기간·세액공제율을 바꿔 보며 어느 지점에서 결과가 뒤집히는지 확인해 보세요.';
+    }
+    $('insight-title').textContent = title;
+    $('insight-desc').innerHTML = desc;
+  }
+
+  run();
+  let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(run, 200); });
+})();
+</script>
+</body>
+</html>
