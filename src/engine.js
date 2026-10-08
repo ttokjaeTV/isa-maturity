@@ -7,6 +7,8 @@
  *  - 매달, ISA 남은 한도 안에서 일반계좌 돈을 ISA로 옮긴다(이익분은 15.4% 과세 후 이동).
  *  - ISA 한도: 계좌를 연 달에 그 해 2,000만원이 생기고, 이후 매년 1월에 2,000만원씩 더 생긴다(미사용분 이월).
  *    계좌당 총 납입 1억원. 해지 후 새로 연 계좌는 한도가 처음부터 다시 생긴다.
+ *  - initialRoom: 이미 가입해 둔 ISA에 이월 한도가 쌓인 특수한 경우, 첫 계좌(A의 첫 사이클·B)에 처음부터 그만큼 한도가 있다고 본다.
+ *    (3년 만기는 지금부터 센다고 단순화)
  *  - schedule 'yearly': 1월에 개설(매년 1월 1회 넣는 엑셀 방식), 'fast': 12월에 개설(다음 달 1월에 바로 새 연도 한도).
  * 시간 단위: 월. 수익률은 월 복리((1+r)^(1/12))로 환산해 연 단위 결과가 엑셀과 같게 맞춘다.
  */
@@ -55,6 +57,7 @@
       schedule: 'yearly', r: 0.08, freeLimit: 2000000, isaTax: 0.099,
       creditRate: 0.132, pensionRate: 0.055, otherRate: 0.165, genTax: 0.154,
       reinvest: true, horizon: 0, excelRefund: false,
+      initialRoom: 0, // >0이면 첫 ISA에 이월 한도가 쌓여 있어 처음에 이만큼 넣을 수 있음(최대 1억)
     }, p || {});
     if (P.mode === 'annual') P.schedule = 'yearly';
     const g1 = Math.pow(1 + P.r, 1 / 12);
@@ -72,9 +75,10 @@
 
   function runCore(P, g1, inflows, endM, probe) {
     const isJan = m => (P.schedule === 'fast' ? m % 12 === 1 : m % 12 === 0);
-    const A = { isa: 0, isaPrin: 0, room: ISA_YEAR_LIMIT, openM: 0, pen: 0, penFree: 0,
+    const firstRoom = P.initialRoom > 0 ? Math.min(Math.max(P.initialRoom, ISA_YEAR_LIMIT), ISA_TOTAL_LIMIT) : ISA_YEAR_LIMIT;
+    const A = { isa: 0, isaPrin: 0, room: firstRoom, openM: 0, pen: 0, penFree: 0,
       refundPot: 0, refundPotPrin: 0, refundCash: 0, gen: { v: 0, c: 0 }, paid: 0, transfers: [] };
-    const B = { isa: 0, isaPrin: 0, room: ISA_YEAR_LIMIT, gen: { v: 0, c: 0 }, paid: 0 };
+    const B = { isa: 0, isaPrin: 0, room: firstRoom, gen: { v: 0, c: 0 }, paid: 0 };
     const inMap = new Map();
     inflows.forEach(e => inMap.set(e.m, (inMap.get(e.m) || 0) + e.amt));
     let lastDepositA = -1, lastDepositB = -1, inflowTotal = 0, lumpDoneA = -1;
