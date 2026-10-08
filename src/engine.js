@@ -8,7 +8,7 @@
  *  - ISA 한도: 계좌를 연 달에 그 해 2,000만원이 생기고, 이후 매년 1월에 2,000만원씩 더 생긴다(미사용분 이월).
  *    계좌당 총 납입 1억원. 해지 후 새로 연 계좌는 한도가 처음부터 다시 생긴다.
  *  - initialRoom: 이미 가입해 둔 ISA에 이월 한도가 쌓인 특수한 경우, 첫 계좌(A의 첫 사이클·B)에 처음부터 그만큼 한도가 있다고 본다.
- *    (3년 만기는 지금부터 센다고 단순화)
+ *  - firstAge: 그 기존 ISA를 가입한 지 지난 개월 수(0~35). 첫 만기는 (36 − firstAge)개월 뒤, 이후 3년마다.
  *  - schedule 'yearly': 1월에 개설(매년 1월 1회 넣는 엑셀 방식), 'fast': 12월에 개설(다음 달 1월에 바로 새 연도 한도).
  * 시간 단위: 월. 수익률은 월 복리((1+r)^(1/12))로 환산해 연 단위 결과가 엑셀과 같게 맞춘다.
  */
@@ -58,13 +58,17 @@
       creditRate: 0.132, pensionRate: 0.055, otherRate: 0.165, genTax: 0.154,
       reinvest: true, horizon: 0, excelRefund: false,
       initialRoom: 0, // >0이면 첫 ISA에 이월 한도가 쌓여 있어 처음에 이만큼 넣을 수 있음(최대 1억)
+      firstAge: 0,    // 기존 ISA 가입 후 지난 개월 수 (0~35)
     }, p || {});
     if (P.mode === 'annual') P.schedule = 'yearly';
     const g1 = Math.pow(1 + P.r, 1 / 12);
     const inflows = buildInflows(P);
+    P.firstAge = Math.max(0, Math.min(35, Math.round(P.firstAge || 0)));
+    const m1 = 36 - P.firstAge; // 전략A 첫 만기 달
+    const nextMat = m => m < m1 ? m1 : m1 + 36 * Math.ceil((m - m1 + 1) / 36); // m에 넣은 돈이 들어간 사이클의 만기 달
     const probe = runCore(P, g1, inflows, MAX_M, true);
     const minYears = Math.max(
-      probe.lastDepositA >= 0 ? (Math.floor(probe.lastDepositA / 36) + 1) * 3 : 3,
+      probe.lastDepositA >= 0 ? Math.ceil(nextMat(probe.lastDepositA) / 12) : Math.ceil(m1 / 12),
       Math.ceil((probe.lastDepositB + 1) / 12),
       Math.ceil(((inflows.length ? inflows[inflows.length - 1].m : 0) + 1) / 12));
     const H = Math.max(minYears, Math.round(P.horizon || 0), 1);
@@ -76,7 +80,9 @@
   function runCore(P, g1, inflows, endM, probe) {
     const isJan = m => (P.schedule === 'fast' ? m % 12 === 1 : m % 12 === 0);
     const firstRoom = P.initialRoom > 0 ? Math.min(Math.max(P.initialRoom, ISA_YEAR_LIMIT), ISA_TOTAL_LIMIT) : ISA_YEAR_LIMIT;
-    const A = { isa: 0, isaPrin: 0, room: firstRoom, openM: 0, pen: 0, penFree: 0,
+    const m1 = 36 - (P.firstAge || 0);
+    const isMat = m => m > 0 && m >= m1 && (m - m1) % 36 === 0;
+    const A = { isa: 0, isaPrin: 0, room: firstRoom, openM: -(P.firstAge || 0), pen: 0, penFree: 0,
       refundPot: 0, refundPotPrin: 0, refundCash: 0, gen: { v: 0, c: 0 }, paid: 0, transfers: [] };
     const B = { isa: 0, isaPrin: 0, room: firstRoom, gen: { v: 0, c: 0 }, paid: 0 };
     const inMap = new Map();
@@ -89,7 +95,7 @@
 
     for (let m = 0; m <= endM; m++) {
       // (1) 전략A: 만기(36개월마다) 해지 → 연금저축 이전 → 새 ISA 개설
-      if (m > 0 && m % 36 === 0) {
+      if (isMat(m)) {
         if (A.isa > 0.5) {
           const gain = A.isa - A.isaPrin;
           const tax = Math.max(gain - P.freeLimit, 0) * P.isaTax;
