@@ -783,7 +783,12 @@
     if (state.mode === 'annual' && v > 20000000) return '<span style="color:#D9542B">ISA 연간 한도는 2,000만원 → 2,000만원으로 계산</span>';
     return fmtLong(v) + ' (월 ' + fmtLong(v / 12) + ')' + (state.mode === 'both' && v > 20000000 ? ' · 한도 넘는 돈은 일반계좌에서 대기' : '');
   });
-  bindMoney('total', 'total-hint', v => v ? fmtLong(v) + (num('annual') ? ' · ' + Math.ceil(v / Math.min(num('annual') || 1, 20000000)) + '년 납입' : '') : '');
+  function totalHint(v) { return v ? fmtLong(v) + (num('annual') ? ' · ' + Math.ceil(v / Math.min(num('annual') || 1, 20000000)) + '년 납입' : '') : ''; }
+  bindMoney('total', 'total-hint', totalHint);
+  $('annual').addEventListener('input', () => {
+    $('total-hint').innerHTML = totalHint(num('total'));
+    if ($('years-hint')) $('years-hint').innerHTML = (num('years') && num('annual')) ? '매년 저축 합계 ' + fmtLong(num('years') * num('annual')) + ' · 목돈 포함 ' + fmtLong(num('years') * num('annual') + num('lump')) : '';
+  });
   bindMoney('lump', 'lump-hint', v => {
     if (!v) return '';
     if (v <= 20000000) return fmtLong(v);
