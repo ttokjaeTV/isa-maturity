@@ -8,7 +8,8 @@
  *  - ISA 한도: 계좌를 연 달에 그 해 2,000만원이 생기고, 이후 매년 1월에 2,000만원씩 더 생긴다(미사용분 이월).
  *    계좌당 총 납입 1억원. 해지 후 새로 연 계좌는 한도가 처음부터 다시 생긴다.
  *  - initialRoom: 이미 가입해 둔 ISA에 이월 한도가 쌓인 특수한 경우, 첫 계좌(A의 첫 사이클·B)에 처음부터 그만큼 한도가 있다고 본다.
- *  - firstAge: 그 기존 ISA를 가입한 지 지난 개월 수(0~35). 첫 만기는 (36 − firstAge)개월 뒤, 이후 3년마다.
+ *  - firstMat: 그 기존 ISA를 첫 해지(만기)·연금 전환하는 시점, 지금부터 몇 개월 뒤(1~). 이후 새 ISA는 3년마다.
+ *    (가입 3년 미만이면 36 − 지난 개월, 3년 지난 계좌는 언제든 해지 가능하므로 사용자가 고른 값. 옛 firstAge도 받음)
  *  - openMonth: ISA를 여는 달(1~12). 그 달에 그 해 한도, 다음 1월부터 매년 새 한도. 1월이면 매년 1월 1회(엑셀 방식),
  *    12월이면 한 달 뒤 1월에 바로 다음 해 한도가 생겨 가장 빨리 넣을 수 있다. (옛 schedule 'yearly'=1월, 'fast'=12월도 받음)
  * 시간 단위: 월. 수익률은 월 복리((1+r)^(1/12))로 환산해 연 단위 결과가 엑셀과 같게 맞춘다.
@@ -59,7 +60,8 @@
       creditRate: 0.132, pensionRate: 0.055, otherRate: 0.165, genTax: 0.154,
       reinvest: true, horizon: 0, excelRefund: false,
       initialRoom: 0, // >0이면 첫 ISA에 이월 한도가 쌓여 있어 처음에 이만큼 넣을 수 있음(최대 1억)
-      firstAge: 0,    // 기존 ISA 가입 후 지난 개월 수 (0~35)
+      firstAge: 0,    // (옛 방식) 기존 ISA 가입 후 지난 개월 수 (0~35)
+      firstMat: 0,    // 첫 ISA 해지·연금 전환까지 남은 개월 수 (0이면 36 − firstAge)
     }, p || {});
     if (!(P.openMonth >= 1 && P.openMonth <= 12)) P.openMonth = P.schedule === 'fast' ? 12 : 1;
     P.openMonth = Math.round(P.openMonth);
@@ -67,14 +69,15 @@
     const g1 = Math.pow(1 + P.r, 1 / 12);
     const inflows = buildInflows(P);
     P.firstAge = Math.max(0, Math.min(35, Math.round(P.firstAge || 0)));
-    const m1 = 36 - P.firstAge; // 전략A 첫 만기 달
+    P.firstMat = P.firstMat > 0 ? Math.max(1, Math.min(MAX_M - 12, Math.round(P.firstMat))) : 36 - P.firstAge;
+    const m1 = P.firstMat; // 전략A 첫 만기 달
     const nextMat = m => m < m1 ? m1 : m1 + 36 * Math.ceil((m - m1 + 1) / 36); // m에 넣은 돈이 들어간 사이클의 만기 달
     const probe = runCore(P, g1, inflows, MAX_M, true);
     const minYears = Math.max(
       probe.lastDepositA >= 0 ? Math.ceil(nextMat(probe.lastDepositA) / 12) : Math.ceil(m1 / 12),
       Math.ceil((probe.lastDepositB + 1) / 12),
       Math.ceil(((inflows.length ? inflows[inflows.length - 1].m : 0) + 1) / 12));
-    const H = Math.max(minYears, Math.round(P.horizon || 0), 1);
+    const H = Math.max(minYears, Math.round(P.horizon || 0), 3); // 비교가 의미 있도록 최소 3년
     const res = runCore(P, g1, inflows, 12 * H, false);
     res.minYears = minYears; res.H = H;
     return res;
@@ -83,9 +86,9 @@
   function runCore(P, g1, inflows, endM, probe) {
     const isJan = m => (P.openMonth - 1 + m) % 12 === 0; // m개월 뒤가 1월인지 (m=0은 개설 달)
     const firstRoom = P.initialRoom > 0 ? Math.min(Math.max(P.initialRoom, ISA_YEAR_LIMIT), ISA_TOTAL_LIMIT) : ISA_YEAR_LIMIT;
-    const m1 = 36 - (P.firstAge || 0);
+    const m1 = P.firstMat;
     const isMat = m => m > 0 && m >= m1 && (m - m1) % 36 === 0;
-    const A = { isa: 0, isaPrin: 0, room: firstRoom, openM: -(P.firstAge || 0), pen: 0, penFree: 0,
+    const A = { isa: 0, isaPrin: 0, room: firstRoom, openM: P.firstMat === 36 ? 0 : -1, pen: 0, penFree: 0,
       refundPot: 0, refundPotPrin: 0, refundCash: 0, gen: { v: 0, c: 0 }, paid: 0, transfers: [] };
     const B = { isa: 0, isaPrin: 0, room: firstRoom, gen: { v: 0, c: 0 }, paid: 0 };
     const inMap = new Map();
