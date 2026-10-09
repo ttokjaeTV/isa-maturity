@@ -346,7 +346,7 @@
       </div>
     </div>
 
-    <div class="sub-box" id="sched-box" style="display:none">
+    <div class="sub-box" id="sched-box">
       <div class="sub-title">ISA에 넣는 방식</div>
       <div class="sub-desc">ISA 연간 한도(2,000만원)는 <strong>매년 1월 첫 영업일</strong>에 새로 생기고(안 쓴 한도는 이월), 만기는 <strong>가입일부터 3년</strong>입니다. 그래서 몇 월에 여느냐에 따라 다음 한도가 생기기까지 걸리는 시간이 달라집니다. 한도를 넘는 돈은 일반계좌에서 기다렸다가 한도가 생기는 대로 ISA로 옮기고, 만기에 해지하면 바로 새 ISA를 엽니다.</div>
       <div class="month-row">
@@ -530,7 +530,7 @@
  *  - initialRoom: 이미 가입해 둔 ISA에 이월 한도가 쌓인 특수한 경우, 첫 계좌(A의 첫 사이클·B)에 처음부터 그만큼 한도가 있다고 본다.
  *  - firstMat: 그 기존 ISA를 첫 해지(만기)·연금 전환하는 시점, 지금부터 몇 개월 뒤(1~). 이후 새 ISA는 3년마다.
  *    (가입 3년 미만이면 36 − 지난 개월, 3년 지난 계좌는 언제든 해지 가능하므로 사용자가 고른 값. 옛 firstAge도 받음)
- *  - openMonth: ISA를 여는 달(1~12). 그 달에 그 해 한도, 다음 1월부터 매년 새 한도. 1월이면 매년 1월 1회(엑셀 방식),
+ *  - openMonth: ISA를 여는 달(1~12). 그 달에 그 해 한도, 다음 1월부터 매년 새 한도. 매년 저축 방식은 매년 이 달에 넣는다. 1월이면 매년 1월 1회(엑셀 방식),
  *    12월이면 한 달 뒤 1월에 바로 다음 해 한도가 생겨 가장 빨리 넣을 수 있다. (옛 schedule 'yearly'=1월, 'fast'=12월도 받음)
  * 시간 단위: 월. 수익률은 월 복리((1+r)^(1/12))로 환산해 연 단위 결과가 엑셀과 같게 맞춘다.
  */
@@ -588,7 +588,6 @@
     }, p || {});
     if (!(P.openMonth >= 1 && P.openMonth <= 12)) P.openMonth = P.schedule === 'fast' ? 12 : 1;
     P.openMonth = Math.round(P.openMonth);
-    if (P.mode === 'annual' && !P.existing) P.openMonth = 1;
     const g1 = Math.pow(1 + P.r, 1 / 12);
     const inflows = buildInflows(P);
     P.firstAge = Math.max(0, Math.min(35, Math.round(P.firstAge || 0)));
@@ -872,7 +871,7 @@
     $('f-annual').style.display = (m === 'lump' || m === 'none') ? 'none' : '';
     $('f-total').style.display = m === 'annual' ? '' : 'none';
     $('f-years').style.display = m === 'both' ? '' : 'none';
-    $('sched-box').style.display = (m === 'annual' || m === 'none' || ex) ? 'none' : '';
+    $('sched-box').style.display = (m === 'none' || ex) ? 'none' : '';
     $('annual-label').textContent = m === 'both' ? '매년 추가 저축' : '연간 납입금';
     if (m === 'both' && num('lump') === 100000000 && num('annual') === 10000000) {
       // 목돈+적립 기본 예시: 목돈 5,000만 + 매년 1,200만 × 10년
@@ -903,9 +902,11 @@
   function monthNote() {
     const mo = state.openMonth, gap = mo === 1 ? 12 : 13 - mo, yrs = mo === 1 ? 3 : 4;
     const existing = false;
-    $('open-month-label').innerHTML = (existing ? '지금이 몇 월인가요' : 'ISA 개설 월') + '<span class="pick-badge">골라 주세요</span>';
+    const annualMode = state.mode === 'annual';
+    $('open-month-label').innerHTML = (existing ? '지금이 몇 월인가요' : annualMode ? 'ISA 개설 월 (매년 넣는 달)' : 'ISA 개설 월') + '<span class="pick-badge">골라 주세요</span>';
     $('open-month-note').innerHTML = existing
       ? '기존 ISA에서는 다음 1월 새 한도가 <b>' + gap + '개월 뒤</b>에 생깁니다. 만기 후 새로 여는 ISA도 그 달 기준으로 이어집니다.'
+      : annualMode ? '개설한 달에 첫 납입을 하고, 이후 <b>매년 ' + mo + '월</b>에 연간 납입금을 넣는 것으로 계산합니다. 3년 만기도 ' + mo + '월이라, 해지하고 새 ISA를 열어 그달 납입을 이어갑니다.' + (mo === 1 ? ' 매년 1월 한 번씩 넣는 엑셀 방식과 같습니다.' : '')
       : '처음 2,000만원은 개설할 때, 다음 2,000만원은 <b>' + gap + '개월 뒤</b> 1월에 생깁니다. 3년 동안 <b>' + yrs + '개 연도 한도(최대 ' + (yrs * 2) + ',000만원)</b>를 씁니다.'
         + (mo === 12 ? ' 다음 한도가 가장 빨리 생기는 달입니다.' : mo === 1 ? ' 매년 1월 한 번씩 넣는 엑셀 방식과 같습니다.' : '');
   }
@@ -966,7 +967,7 @@
       : (userH ? H + '년 뒤 전부 찾는다고 계산' : '자동: ' + H + '년 (마지막으로 넣은 ISA가 만기되는 해, 최소 3년). 더 길게 입력 가능');
     const lastRow = res.years[res.years.length - 1];
     const endTxt = lastRow ? lastRow.label.replace(/년$/, '년 말') : '';
-    $('start-hint').textContent = $('start-year').value + '년 시작 → ' + endTxt + '에 전부 찾는 것으로 계산';
+    $('start-hint').textContent = $('start-year').value + '년 ' + state.openMonth + '월 시작 → ' + endTxt + '에 전부 찾는 것으로 계산';
     if (base.existing) $('horizon-hint').textContent += ' · 지금(' + nowY + '년 ' + nowM + '월) → ' + endTxt + '에 전부 찾음';
 
     // 판정

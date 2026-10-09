@@ -10,7 +10,7 @@
  *  - initialRoom: 이미 가입해 둔 ISA에 이월 한도가 쌓인 특수한 경우, 첫 계좌(A의 첫 사이클·B)에 처음부터 그만큼 한도가 있다고 본다.
  *  - firstMat: 그 기존 ISA를 첫 해지(만기)·연금 전환하는 시점, 지금부터 몇 개월 뒤(1~). 이후 새 ISA는 3년마다.
  *    (가입 3년 미만이면 36 − 지난 개월, 3년 지난 계좌는 언제든 해지 가능하므로 사용자가 고른 값. 옛 firstAge도 받음)
- *  - openMonth: ISA를 여는 달(1~12). 그 달에 그 해 한도, 다음 1월부터 매년 새 한도. 1월이면 매년 1월 1회(엑셀 방식),
+ *  - openMonth: ISA를 여는 달(1~12). 그 달에 그 해 한도, 다음 1월부터 매년 새 한도. 매년 저축 방식은 매년 이 달에 넣는다. 1월이면 매년 1월 1회(엑셀 방식),
  *    12월이면 한 달 뒤 1월에 바로 다음 해 한도가 생겨 가장 빨리 넣을 수 있다. (옛 schedule 'yearly'=1월, 'fast'=12월도 받음)
  * 시간 단위: 월. 수익률은 월 복리((1+r)^(1/12))로 환산해 연 단위 결과가 엑셀과 같게 맞춘다.
  */
@@ -68,7 +68,6 @@
     }, p || {});
     if (!(P.openMonth >= 1 && P.openMonth <= 12)) P.openMonth = P.schedule === 'fast' ? 12 : 1;
     P.openMonth = Math.round(P.openMonth);
-    if (P.mode === 'annual' && !P.existing) P.openMonth = 1;
     const g1 = Math.pow(1 + P.r, 1 / 12);
     const inflows = buildInflows(P);
     P.firstAge = Math.max(0, Math.min(35, Math.round(P.firstAge || 0)));
