@@ -61,10 +61,12 @@
   .input-unit { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 14px; font-weight: 700; color: var(--ink-mute); pointer-events: none; }
   .input-hint { font-size: 12px; font-weight: 600; color: var(--ink-mute); margin-top: 6px; min-height: 18px; }
   .input-hint.warn { color: var(--accent); }
-  .chips { display: flex; flex-wrap: wrap; gap: 10px; }
-  .chip { flex: 1 1 auto; min-height: 64px; border: 2px solid var(--border); background: var(--white); color: var(--ink); padding: 12px 18px; border-radius: 12px; font-family: inherit;
-    font-size: 17px; font-weight: 800; cursor: pointer; transition: all .15s ease; text-align: left; line-height: 1.35; letter-spacing: -0.3px; }
-  .chip small { display: block; margin-top: 3px; font-size: 13px; font-weight: 600; color: var(--ink-mute); letter-spacing: 0; }
+  .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .chip { min-height: 88px; border: 2.5px solid var(--border); background: var(--white); color: var(--ink); padding: 16px 22px; border-radius: 14px; font-family: inherit;
+    font-size: 21px; font-weight: 800; cursor: pointer; transition: all .15s ease; text-align: left; line-height: 1.35; letter-spacing: -0.3px; }
+  .tax-grid { display: grid; grid-template-columns: 1fr; gap: 22px; }
+  .tax-grid .chips { grid-template-columns: repeat(3, minmax(0, 260px)); }
+  .chip small { display: block; margin-top: 5px; font-size: 15px; font-weight: 600; color: var(--ink-mute); letter-spacing: 0; }
   .chip:hover { border-color: var(--accent); }
   .chip.on { background: var(--dark-warm); border-color: var(--dark-warm); color: var(--white); box-shadow: 0 3px 10px rgba(58,47,38,.18); }
   .chip.on small { color: var(--accent-soft); }
@@ -187,8 +189,13 @@
     .card { padding: 18px 16px; margin-bottom: 20px; border-radius: 16px; }
     .grid-2, .grid-3 { grid-template-columns: 1fr; gap: 14px; }
     .grid-4 { grid-template-columns: 1fr 1fr; gap: 10px; }
-    .chip { font-size: 16px; padding: 11px 14px; min-height: 58px; }
-    .chip small { font-size: 12px; }
+    .chips { grid-template-columns: 1fr 1fr; gap: 10px; }
+    #mode-chips { grid-template-columns: 1fr; }
+    .tax-grid .chips { grid-template-columns: 1fr 1fr; }
+    .tax-grid .chips.three { grid-template-columns: 1fr 1fr 1fr; }
+    .chips.three .chip { padding: 14px 12px; font-size: 17px; }
+    .chip { font-size: 18px; padding: 14px 16px; min-height: 76px; }
+    .chip small { font-size: 13px; }
     .verdict { padding: 22px 18px; border-radius: 16px; }
     .verdict-title { font-size: 21px; }
     .verdict-rows { grid-template-columns: 1fr; }
@@ -341,7 +348,7 @@
   <!-- STEP 02 -->
   <div class="card">
     <div class="step-label"><div class="step-line"></div><span class="step-text">STEP 02 / 세금 조건</span></div>
-    <div class="grid-3">
+    <div class="tax-grid">
       <div>
         <label class="label">ISA 유형 (비과세 한도)</label>
         <div class="chips" id="free-chips">
@@ -358,7 +365,7 @@
       </div>
       <div>
         <label class="label">연금 받을 나이 (연금소득세)</label>
-        <div class="chips" id="age-chips">
+        <div class="chips three" id="age-chips">
           <button class="chip on" data-v="0.055">55~69세<small>5.5%</small></button>
           <button class="chip" data-v="0.044">70~79세<small>4.4%</small></button>
           <button class="chip" data-v="0.033">80세~<small>3.3%</small></button>
