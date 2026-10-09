@@ -680,11 +680,7 @@
     for (let y = y0; y <= y0 + 10; y++) sel.insertAdjacentHTML('beforeend', '<option value="' + y + '">' + y + '년</option>');
   })();
   let startYearTouched = false;
-  function defaultStartYear() {
-    // 고른 개설 달이 올해 이미 지났으면 내년
-    const mo = state.mode === 'annual' ? 1 : state.openMonth;
-    return today.getFullYear() + (mo < today.getMonth() + 1 ? 1 : 0);
-  }
+  function defaultStartYear() { return today.getFullYear(); } // 기본은 올해
   function syncStartYear() { if (!startYearTouched) $('start-year').value = String(defaultStartYear()); }
   $('start-year').addEventListener('change', () => { startYearTouched = true; run(); });
   function rowLabel(y) {
@@ -765,7 +761,7 @@
       : (userH ? H + '년 뒤 전부 찾는다고 계산' : '자동: ' + H + '년 (마지막으로 넣은 ISA가 만기되는 해, 최소 3년). 더 길게 입력 가능');
     const lastRow = res.years[res.years.length - 1];
     const endTxt = lastRow ? lastRow.label.replace(/년$/, '년 말') : '';
-    $('start-hint').textContent = $('start-year').value + '년 ' + (state.mode === 'annual' ? 1 : state.openMonth) + '월 시작 → ' + endTxt + '에 전부 찾는 것으로 계산';
+    $('start-hint').textContent = $('start-year').value + '년 시작 → ' + endTxt + '에 전부 찾는 것으로 계산';
     if (base.existing) $('horizon-hint').textContent += ' · 지금(' + nowY + '년 ' + nowM + '월) → ' + endTxt + '에 전부 찾음';
 
     // 판정
