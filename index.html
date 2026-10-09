@@ -94,9 +94,11 @@
   @media (max-width: 768px) { .room-grid { grid-template-columns: 1fr; gap: 12px; } }
   .lump-warn { display: block; margin-top: 4px; color: var(--accent); font-weight: 700; line-height: 1.55; }
   .lump-warn a { color: var(--accent); }
-  .check-row { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--ink); line-height: 1.5; }
-  .check-row input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--accent); flex-shrink: 0; padding: 0; }
-  .check-row small { font-size: 12px; color: var(--ink-mute); font-weight: 500; }
+  .check-row { display: flex; gap: 14px; align-items: center; cursor: pointer; font-size: 16px; font-weight: 600; color: var(--ink); line-height: 1.5; }
+  .check-row input { width: 32px; height: 32px; margin: 0; accent-color: var(--accent); flex-shrink: 0; padding: 0; cursor: pointer; }
+  .check-row b { font-size: 17px; font-weight: 800; }
+  .check-row small { font-size: 13px; color: var(--ink-mute); font-weight: 500; }
+  @media (max-width: 768px) { .check-row { gap: 12px; } .check-row input { width: 28px; height: 28px; } .check-row b { font-size: 16px; } }
   .divider { height: 1px; background: var(--border); margin: 24px 0; }
 
   .verdict { background: var(--dark-warm); color: var(--white); border-radius: 20px; padding: 28px 32px; margin-bottom: 20px; }
