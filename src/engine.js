@@ -198,7 +198,63 @@
     };
   }
 
-  const api = { simulate, ISA_YEAR_LIMIT, ISA_TOTAL_LIMIT, TRANSFER_CREDIT_CAP };
+  /* 해지 타이밍 비교: 지금 가진 ISA를 '지금(가입 3년 전이면 만기 때) 해지'하는 것과 'N년 더 유지 후 해지'하는 것을 비교
+   * p: { value, principal, wait0(해지 가능 시점까지 남은 개월), years(N), r, freeLimit,
+   *      dest: 'pension'(연금저축 이전) | 'isa'(새 ISA + 한도 밖은 일반계좌),
+   *      genType: 'overseas'(이익 15.4%, 팔 때) | 'domestic'(매매차익 비과세, 분배금만 15.4%), divYield,
+   *      creditRate, pensionRate, calMonth(해지 가능 시점의 달 1~12) }
+   * 두 경우 모두 N년 뒤 시점에 전부 찾는다(연금 이전이면 그때부터 연금으로 받는다)고 보고 세후 금액을 비교한다. */
+  function deferral(p) {
+    const P = Object.assign({ value: 0, principal: 0, wait0: 0, years: 3, r: 0.08, freeLimit: 2000000, isaTax: 0.099, genTax: 0.154,
+      dest: 'pension', genType: 'overseas', divYield: 0.02, creditRate: 0.132, pensionRate: 0.055, calMonth: 1 }, p || {});
+    const g1 = Math.pow(1 + P.r, 1 / 12), M = Math.max(1, Math.round(P.years * 12));
+    const gM = Math.pow(g1, M), F = P.freeLimit, T = P.isaTax;
+    const isaTaxOf = (v, prin, f) => Math.max(v - prin - f, 0) * T;
+    const V0 = P.value * Math.pow(g1, Math.max(0, P.wait0)); // 해지 가능 시점의 평가액 (두 경우 같음)
+    // 유지: N년 뒤 해지
+    const keepV = V0 * gM, taxLater = isaTaxOf(keepV, P.principal, F), keepCash = keepV - taxLater;
+    // 지금 해지
+    const taxNow = isaTaxOf(V0, P.principal, F), c = V0 - taxNow;
+    // 기준선: 해지한 돈을 같은 세율(9.9%) 계좌에 전부 다시 넣었다고 칠 때 (ideal1 = 비과세 한도 없이, ideal = 새 한도 포함)
+    const ideal1 = c * gM - isaTaxOf(c * gM, c, 0), ideal = c * gM - isaTaxOf(c * gM, c, F);
+    const out = { V0, taxNow, cashNow: c, keepV, taxLater, keepCash, deferValue: keepCash - ideal1, allowValue: ideal - ideal1, M };
+    if (P.dest === 'pension') {
+      const pr = P.pensionRate, cr = P.creditRate;
+      // 지금 이전: 전환금액 10%(최대 300만원) 세액공제, 환급액은 연금저축에 다시 넣어 굴림(원금 비과세, 수익 과세)
+      const base = Math.min(c * 0.1, TRANSFER_CREDIT_CAP), refund = base * cr;
+      const penV = c * gM, refV = refund * gM;
+      const penTax = (base + (penV - c)) * pr + (refV - refund) * pr;
+      out.term = { final: penV + refV - penTax, isaTax: taxNow, isaTax2: 0, genTax: 0, refund, penTax, value: penV + refV };
+      // 유지 후 N년 뒤 이전: 그때 받는 환급은 굴릴 시간이 없음
+      const base2 = Math.min(keepCash * 0.1, TRANSFER_CREDIT_CAP), refund2 = base2 * cr, penTax2 = base2 * pr;
+      out.keep = { final: keepCash + refund2 - penTax2, isaTax: taxLater, refund: refund2, penTax: penTax2, value: keepV };
+    } else {
+      // 지금 해지 → 바로 새 ISA (그 달 2,000만원, 매년 1월 2,000만원, 계좌당 1억원) + 나머지는 일반계좌에서 대기
+      const dom = P.genType === 'domestic', gt = dom ? 0 : P.genTax;
+      const gen = { v: c, c: c };
+      let isa = 0, prin = 0, room = ISA_YEAR_LIMIT, divTax = 0;
+      const isJan = m => (P.calMonth - 1 + m) % 12 === 0;
+      for (let m = 0; m < M; m++) {
+        if (m > 0 && isJan(m)) room += ISA_YEAR_LIMIT;
+        if (gen.v > 0.5) {
+          const want = Math.min(room, ISA_TOTAL_LIMIT - prin, genAfterTax(gen, gt));
+          if (want > 0.5) { const amt = genSell(gen, want, gt); isa += amt; prin += amt; room -= amt; }
+        }
+        isa *= g1;
+        if (dom) { // 분배금(연 divYield)에 15.4% → 세후 재투자
+          const t = gen.v * (P.divYield / 12) * P.genTax; gen.v = gen.v * g1 - t; divTax += t;
+        } else gen.v *= g1;
+      }
+      const isaTax2 = isaTaxOf(isa, prin, F), genTax = Math.max(gen.v - gen.c, 0) * gt + divTax;
+      out.term = { final: isa - isaTax2 + gen.v - Math.max(gen.v - gen.c, 0) * gt, isaTax: taxNow, isaTax2, genTax, refund: 0, penTax: 0,
+        newIsa: isa, newIsaPrin: prin, gen: gen.v, value: isa + gen.v };
+      out.keep = { final: keepCash, isaTax: taxLater, refund: 0, penTax: 0, value: keepV };
+    }
+    out.diff = out.keep.final - out.term.final; // + 이면 유지가 유리
+    return out;
+  }
+
+  const api = { simulate, deferral, ISA_YEAR_LIMIT, ISA_TOTAL_LIMIT, TRANSFER_CREDIT_CAP };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.IsaEngine = api;
 })(typeof window !== 'undefined' ? window : globalThis);
