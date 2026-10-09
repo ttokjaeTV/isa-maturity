@@ -94,8 +94,12 @@
   .month-note { font-size: 13px; color: var(--ink-soft); font-weight: 600; line-height: 1.6; background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
   .month-note b { color: var(--accent); }
   @media (max-width: 768px) { .month-row { grid-template-columns: 1fr; gap: 10px; } }
-  .room-box { margin-top: 4px; margin-bottom: 4px; border: 1.5px solid var(--border); border-radius: 12px; padding: 14px 16px; background: var(--bg-alt); }
-  .room-box.need { border-color: var(--accent); background: #FBF1E9; }
+  .exist-box { margin-top: 14px; border: 1.5px solid var(--accent); border-radius: 14px; padding: 16px 18px; background: #FBF1E9; }
+  .exist-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .exist-summary { margin-top: 12px; font-size: 14px; font-weight: 600; color: var(--ink-soft); line-height: 1.7; background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
+  .exist-summary b { color: var(--accent); }
+  @media (max-width: 1000px) { .exist-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 768px) { .exist-grid { grid-template-columns: 1fr; gap: 12px; } }
   .room-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 14px; }
   .wide-unit input { padding-right: 70px; }
   input:disabled { background: var(--bg-alt); color: var(--ink-soft); cursor: not-allowed; }
@@ -196,7 +200,7 @@
     .grid-2, .grid-3 { grid-template-columns: 1fr; gap: 14px; }
     .grid-4 { grid-template-columns: 1fr 1fr; gap: 10px; }
     .chips { grid-template-columns: 1fr 1fr; gap: 10px; }
-    #mode-chips { grid-template-columns: 1fr; }
+    #mode-chips, #acct-chips { grid-template-columns: 1fr; }
     .tax-grid .chips { grid-template-columns: 1fr 1fr; }
     .tax-grid .chips.three { grid-template-columns: 1fr 1fr 1fr; }
     .chips { padding: 8px; border-radius: 16px; gap: 8px; }
@@ -271,8 +275,44 @@
   <!-- STEP 01 -->
   <div class="card">
     <div class="step-label"><div class="step-line"></div><span class="step-text">STEP 01 / 넣을 돈</span></div>
-    <label class="label">돈이 어떻게 들어오나요?</label>
+    <label class="label">어떤 ISA로 계산할까요?</label>
+    <div class="chips" id="acct-chips">
+      <button class="chip on" data-v="new">새로 ISA 만들기<small>새 계좌를 열어 처음부터</small></button>
+      <button class="chip" data-v="existing">지금 가진 ISA로 계산<small>이미 넣어 둔 돈이 있는 계좌</small></button>
+    </div>
+
+    <div class="exist-box" id="exist-box" style="display:none">
+      <div class="exist-grid">
+        <div class="field">
+          <label class="label">ISA 가입 연·월</label>
+          <div class="age-row">
+            <select id="join-y"></select>
+            <select id="join-m"></select>
+          </div>
+          <div class="input-hint" id="join-hint"></div>
+        </div>
+        <div class="field">
+          <label class="label">지금 평가액</label>
+          <div class="input-wrap"><input type="text" inputmode="numeric" id="ex-value" value="30,000,000"><span class="input-unit">원</span></div>
+          <div class="input-hint" id="ex-value-hint"></div>
+        </div>
+        <div class="field">
+          <label class="label">지금까지 넣은 원금</label>
+          <div class="input-wrap"><input type="text" inputmode="numeric" id="ex-prin" value="25,000,000"><span class="input-unit">원</span></div>
+          <div class="input-hint" id="ex-prin-hint"></div>
+        </div>
+        <div class="field">
+          <label class="label">첫 해지·연금 전환 시점</label>
+          <div class="input-wrap wide-unit"><input type="text" inputmode="numeric" id="first-mat" value="12"><span class="input-unit">개월 뒤</span></div>
+          <div class="input-hint" id="mat-hint"></div>
+        </div>
+      </div>
+      <div class="exist-summary" id="exist-summary"></div>
+    </div>
+
+    <label class="label" id="mode-label" style="margin-top:22px">돈이 어떻게 들어오나요?</label>
     <div class="chips" id="mode-chips">
+      <button class="chip" data-v="none" style="display:none">추가로 안 넣음<small>지금 계좌만 계산</small></button>
       <button class="chip on" data-v="annual">매년 저축 (적립식)<small>월급에서 매년 일정액</small></button>
       <button class="chip" data-v="lump">목돈 한 번에 (거치식)<small>이미 모아둔 돈을 옮기기</small></button>
       <button class="chip" data-v="both">목돈 + 매년 저축<small>거치식과 적립식을 함께</small></button>
@@ -280,7 +320,7 @@
 
     <div class="grid-auto" style="margin-top:20px">
       <div class="field" id="f-lump" style="display:none">
-        <label class="label">목돈 (처음에 한 번)</label>
+        <label class="label" id="lump-label">목돈 (처음에 한 번)</label>
         <div class="input-wrap"><input type="text" inputmode="numeric" id="lump" value="100,000,000"><span class="input-unit">원</span></div>
         <div class="input-hint" id="lump-hint"></div>
       </div>
@@ -303,30 +343,6 @@
         <label class="label">연 수익률 (세전)</label>
         <div class="input-wrap"><input type="text" inputmode="decimal" id="rate" value="8"><span class="input-unit">%</span></div>
         <div class="input-hint">ISA·연금저축·일반계좌 모두 같은 수익률</div>
-      </div>
-    </div>
-
-    <div class="room-box" id="room-box" style="display:none">
-      <label class="check-row"><input type="checkbox" id="room-on"><span><b>이월 한도가 쌓여 있는 ISA가 있어요</b> (특수한 경우)<br><small>예전에 만들어 두고 거의 안 넣은 ISA라면 안 쓴 한도가 이월돼 처음에 한 번에 더 많이 넣을 수 있습니다.</small></span></label>
-      <div class="room-grid" id="room-field" style="display:none">
-        <div class="field">
-          <label class="label">지금 바로 넣을 수 있는 한도 (이월분 포함)</label>
-          <div class="input-wrap"><input type="text" inputmode="numeric" id="room" value="50,000,000"><span class="input-unit">원</span></div>
-          <div class="input-hint" id="room-hint"></div>
-        </div>
-        <div class="field">
-          <label class="label">그 ISA에 가입한 지 지난 기간</label>
-          <div class="age-row">
-            <div class="input-wrap"><input type="text" inputmode="numeric" id="age-y" value="2"><span class="input-unit">년</span></div>
-            <div class="input-wrap"><input type="text" inputmode="numeric" id="age-m" value="0"><span class="input-unit">개월</span></div>
-          </div>
-          <div class="input-hint" id="age-hint"></div>
-        </div>
-        <div class="field">
-          <label class="label">첫 해지·연금 전환 시점</label>
-          <div class="input-wrap wide-unit"><input type="text" inputmode="numeric" id="first-mat" value="12"><span class="input-unit">개월 뒤</span></div>
-          <div class="input-hint" id="mat-hint"></div>
-        </div>
       </div>
     </div>
 
@@ -353,7 +369,7 @@
         <div class="input-wrap"><input type="text" inputmode="numeric" id="horizon" value="" placeholder="자동"><span class="input-unit">년</span></div>
         <div class="input-hint" id="horizon-hint"></div>
       </div>
-      <div class="field">
+      <div class="field" id="f-start">
         <label class="label">시작 연도</label>
         <select id="start-year"></select>
         <div class="input-hint" id="start-hint"></div>
@@ -470,7 +486,7 @@
       <li><strong>연금 전환 세액공제</strong>: ISA 만기 후 60일 이내 연금계좌로 옮기면 전환금액의 10%(최대 300만원)를 기존 세액공제 한도에 더해 공제. 환급액은 이전한 해에 받는 것으로 단순화했습니다(실제로는 다음 해 연말정산).</li>
       <li><strong>연금저축 과세</strong>: 세액공제 안 받은 원금은 비과세, 세액공제 받은 원금과 운용수익은 연금으로 받으면 연금소득세(55~69세 5.5%, 70~79세 4.4%, 80세~ 3.3%), 연금 외로 한 번에 찾으면 기타소득세 16.5%.</li>
       <li><strong>연금 수령 한도</strong>: 사적연금을 연 1,500만원 넘게 받으면 그 해 전체를 종합과세하거나 16.5% 분리과세 중 고릅니다. 이 계산은 1,500만원 이하로 나눠 받는다고 보고 연금소득세율을 적용합니다. 55세 이후·가입 5년 경과 등 연금수령 요건은 충족한다고 가정합니다.</li>
-      <li><strong>납입 한도</strong>: 계좌를 연 달에 그 해 2,000만원, 매년 1월에 2,000만원씩 한도가 생깁니다. 한도를 넘는 돈은 일반계좌에서 기다렸다가 한도가 생기는 대로 옮깁니다. ‘이월 한도’ 옵션을 켜면 첫 ISA(전략A의 첫 사이클, 전략B 계좌)에만 입력한 한도를 처음부터 쓰고, 그 계좌의 첫 해지 시점은 가입 3년 미만이면 3년이 차는 때, 3년이 지난 계좌면 입력한 시점으로 봅니다(의무가입기간이 지난 계좌는 언제 해지해도 60일 안에 연금계좌로 옮길 수 있음). 이후 새 ISA는 기본 한도·3년 주기입니다. 이때 ‘ISA 개설 월’ 칸은 지금이 몇 월인지로 계산합니다.</li>
+      <li><strong>납입 한도</strong>: 계좌를 연 달에 그 해 2,000만원, 매년 1월에 2,000만원씩 한도가 생깁니다. 한도를 넘는 돈은 일반계좌에서 기다렸다가 한도가 생기는 대로 옮깁니다. <strong>지금 가진 ISA로 계산</strong>하면 지금(오늘 날짜의 연·월)부터 계산합니다. 남은 한도는 가입한 해부터 올해까지 매년 2,000만원에서 넣은 원금을 뺀 값(계좌당 1억원 상한)으로 자동 계산하고, 첫 해지는 가입 3년이 차는 때(3년이 지났으면 입력한 시점)로 봅니다. 의무가입기간이 지난 계좌는 언제 해지해도 60일 안에 연금계좌로 옮길 수 있습니다. 전략B는 이 계좌를 끝까지 유지하고, 전략A는 첫 해지 때 연금저축으로 옮긴 뒤 새 ISA를 3년마다 엽니다.</li>
       <li><strong>전략B</strong>: ISA 하나를 끝까지 유지하고 운용 종료 시점에 해지합니다. 총 납입 1억원을 넘는 돈은 일반계좌에 둡니다.</li>
       <li><strong>일반계좌</strong>(목돈 대기자금·B의 한도 초과분): 같은 수익률로 운용하고, 이익을 실현할 때 15.4% 과세(국내상장 해외 ETF 기준). 금융소득종합과세·건강보험료는 반영하지 않았습니다.</li>
       <li><strong>그 밖에 빠진 것</strong>: 매매 수수료·ETF 보수, 수익률 변동, 중도 인출, 연금 수령 기간 중 운용수익. 매년 같은 수익률이 나온다고 가정한 단순 비교입니다.</li>
@@ -507,7 +523,7 @@
 <script>
 (function () {
   const $ = id => document.getElementById(id);
-  const state = { mode: 'annual', openMonth: 12, freeLimit: 2000000, creditRate: 0.132, pensionRate: 0.055 };
+  const state = { acct: 'new', mode: 'annual', openMonth: 12, freeLimit: 2000000, creditRate: 0.132, pensionRate: 0.055 };
   let lineChart = null, barChart = null;
 
   // ---------- 포맷 ----------
@@ -566,48 +582,57 @@
   bindMoney('lump', 'lump-hint', v => {
     if (!v) return '';
     if (v <= 20000000) return fmtLong(v);
-    return fmtLong(v) + '<span class="lump-warn">⚠ 2,000만원 초과 — ISA 연간 한도(2,000만원)를 넘어 한 번에 다 못 넣습니다. 기본은 한도가 생길 때마다 나눠 넣는 것으로 계산합니다. 안 쓴 한도가 쌓인(이월) ISA가 있다면 아래 <a href="#room-box">이월 한도</a>를 체크하세요.</span>';
+    if (state.acct === 'existing') {
+      const room = existRoom();
+      return fmtLong(v) + (v > room ? '<span class="lump-warn">⚠ 남은 한도 ' + fmtLong(room) + '까지만 바로 들어가고, 나머지는 새 한도가 생길 때마다(매년 1월 2,000만원) 나눠 넣는 것으로 계산합니다.</span>' : '');
+    }
+    return fmtLong(v) + '<span class="lump-warn">⚠ 2,000만원 초과 — ISA 연간 한도(2,000만원)를 넘어 한 번에 다 못 넣습니다. 기본은 한도가 생길 때마다 나눠 넣는 것으로 계산합니다. 안 쓴 한도가 쌓인 기존 ISA가 있다면 위에서 <b>‘지금 가진 ISA로 계산’</b>을 고르세요.</span>';
   });
-  function applyRoomBox() {
-    const show = state.mode !== 'annual' && num('lump') > 20000000;
-    $('room-box').style.display = show ? '' : 'none';
-    $('room-box').classList.toggle('need', show && !$('room-on').checked);
-  }
-  $('lump').addEventListener('input', applyRoomBox);
   bindMoney('years', 'years-hint', v => (v && num('annual')) ? '매년 저축 합계 ' + fmtLong(v * num('annual')) + ' · 목돈 포함 ' + fmtLong(v * num('annual') + num('lump')) : '');
-  bindMoney('room', 'room-hint', v => {
-    if (!v) return '';
-    if (v > 100000000) return '<span style="color:#D9542B">계좌당 총 납입한도 1억원 → 1억원으로 계산</span>';
-    if (v < 20000000) return '<span style="color:#D9542B">기본 한도(2,000만원)보다 작아 2,000만원으로 계산</span>';
-    return fmtLong(v) + ' · 첫 ISA에만 적용, 만기 후 새로 여는 ISA는 기본 한도(연 2,000만원)';
-  });
-  function roomActive() { return state.mode !== 'annual' && num('lump') > 20000000 && $('room-on').checked; }
-  $('room-on').addEventListener('change', () => { $('room-field').style.display = $('room-on').checked ? '' : 'none'; applyRoomBox(); run(); });
-  function ageMonths() { return Math.min(num('age-y') * 12 + num('age-m'), 999); }
+  // ---------- 지금 가진 ISA ----------
+  const today = new Date();
+  const nowY = today.getFullYear(), nowM = today.getMonth() + 1;
+  (function () {
+    for (let y = nowY; y >= nowY - 15; y--) $('join-y').insertAdjacentHTML('beforeend', '<option value="' + y + '">' + y + '년</option>');
+    for (let m = 1; m <= 12; m++) $('join-m').insertAdjacentHTML('beforeend', '<option value="' + m + '">' + m + '월</option>');
+    $('join-y').value = String(nowY - 3); $('join-m').value = '5';
+  })();
+  function joinElapsed() { return Math.max(0, (nowY - Number($('join-y').value)) * 12 + (nowM - Number($('join-m').value))); }
+  function existRoom() {
+    // 가입한 해부터 올해까지 매년 2,000만원 한도(이월) − 넣은 원금, 계좌당 1억 상한
+    const yrs = nowY - Number($('join-y').value) + 1;
+    return Math.max(0, Math.min(yrs * 20000000, 100000000) - num('ex-prin'));
+  }
   function firstMatMonths() {
-    const e = ageMonths();
+    const e = joinElapsed();
     return e < 36 ? 36 - e : Math.max(1, num('first-mat') || 1);
   }
-  function updateAgeHint() {
-    const e = ageMonths(), el = $('age-hint'), fm = $('first-mat'), mh = $('mat-hint');
-    const maxRoom = Math.min((Math.floor(e / 12) + 2) * 20000000, 100000000);
-    const over = num('room') > maxRoom;
-    el.className = 'input-hint' + (over ? ' warn' : '');
-    el.textContent = over ? '가입 ' + Math.floor(e / 12) + '년 ' + (e % 12) + '개월이면 이월 포함 한도는 최대 약 ' + fmtLong(maxRoom) + '입니다' : (e >= 36 ? '의무가입기간 3년이 지난 계좌' : '의무가입기간 3년까지 ' + (36 - e) + '개월 남음');
+  function updateExisting() {
+    const e = joinElapsed(), fm = $('first-mat'), mh = $('mat-hint');
+    const joinFuture = Number($('join-y').value) === nowY && Number($('join-m').value) > nowM;
+    $('join-hint').className = 'input-hint' + (joinFuture ? ' warn' : '');
+    $('join-hint').textContent = joinFuture ? '아직 오지 않은 달입니다' : '가입 ' + Math.floor(e / 12) + '년 ' + (e % 12) + '개월째' + (e >= 36 ? ' · 의무가입 3년 지남' : ' · 의무가입 3년까지 ' + (36 - e) + '개월');
     if (e < 36) {
       fm.disabled = true; fm.value = 36 - e;
-      mh.className = 'input-hint';
-      mh.textContent = '가입 3년이 차는 때로 자동 계산 · 이후 새 ISA는 3년마다';
+      mh.className = 'input-hint'; mh.textContent = '가입 3년이 차는 때로 자동 · 이후 새 ISA는 3년마다';
     } else {
       if (fm.disabled) { fm.disabled = false; fm.value = 12; }
-      mh.className = 'input-hint';
-      mh.textContent = '3년 지난 계좌는 원할 때 해지하고 60일 안에 연금계좌로 옮길 수 있어요 · 이후 새 ISA는 3년마다';
+      mh.className = 'input-hint'; mh.textContent = '3년 지난 계좌는 원할 때 해지하고 60일 안에 연금계좌로 옮길 수 있어요';
     }
+    const v = num('ex-value'), pr = num('ex-prin'), room = existRoom();
+    $('ex-value-hint').textContent = v ? fmtLong(v) + (pr ? ' · 수익 ' + fmtLong(v - pr) : '') : '';
+    $('ex-prin-hint').className = 'input-hint' + (pr > 100000000 ? ' warn' : '');
+    $('ex-prin-hint').textContent = pr > 100000000 ? '계좌당 총 납입한도는 1억원입니다' : (pr ? fmtLong(pr) : '');
+    const yrs = nowY - Number($('join-y').value) + 1;
+    $('exist-summary').innerHTML = '지금(' + nowY + '년 ' + nowM + '월)부터 계산합니다. 남은 납입 한도 <b>' + fmtLong(room) + '</b> (' + yrs + '개 연도 × 2,000만원 − 넣은 원금, 1억원 상한) · 첫 해지·연금 전환 <b>' + firstMatMonths() + '개월 뒤</b>, 이후 새 ISA는 3년마다'
+      + '<br><small style="color:var(--ink-mute)">전략B는 이 계좌를 끝까지 유지하고, 전략A는 첫 해지 때 연금저축으로 옮긴 뒤 새 ISA를 엽니다.</small>';
   }
-  $('first-mat').addEventListener('input', () => { $('first-mat').value = String($('first-mat').value).replace(/[^0-9]/g, ''); run(); });
-  ['age-y', 'age-m'].forEach(id => $(id).addEventListener('input', () => { updateAgeHint(); run(); }));
-  $('room').addEventListener('input', updateAgeHint);
-  updateAgeHint();
+  $('first-mat').addEventListener('input', () => { $('first-mat').value = String($('first-mat').value).replace(/[^0-9]/g, ''); updateExisting(); run(); });
+  ['join-y', 'join-m'].forEach(id => $(id).addEventListener('change', () => { updateExisting(); refreshHints(); run(); }));
+  bindMoney('ex-value', null, () => '');
+  bindMoney('ex-prin', null, () => '');
+  ['ex-value', 'ex-prin'].forEach(id => $(id).addEventListener('input', () => { updateExisting(); $('lump').dispatchEvent(new Event('input')); }));
+  updateExisting();
   ['rate', 'horizon'].forEach(id => $(id).addEventListener('input', run));
   function refreshHints() {
     ['annual', 'total', 'lump', 'years'].forEach(id => $(id).dispatchEvent(new Event('input')));
@@ -619,17 +644,25 @@
       $(id).querySelectorAll('.chip').forEach(x => x.classList.remove('on'));
       b.classList.add('on');
       state[key] = cast ? cast(b.dataset.v) : b.dataset.v;
-      if (key === 'mode') { applyMode(); $('horizon').value = ''; refreshHints(); applyRoomBox(); }
+      if (key === 'mode' || key === 'acct') { applyMode(); $('horizon').value = ''; refreshHints(); }
       run();
     }));
   }
   function applyMode() {
+    const ex = state.acct === 'existing';
+    const noneChip = $('mode-chips').querySelector('[data-v="none"]');
+    noneChip.style.display = ex ? '' : 'none';
+    if (!ex && state.mode === 'none') { noneChip.classList.remove('on'); state.mode = 'annual'; $('mode-chips').querySelector('[data-v="annual"]').classList.add('on'); }
+    $('exist-box').style.display = ex ? '' : 'none';
+    $('mode-label').childNodes[0].nodeValue = ex ? '앞으로 더 넣을 돈이 있나요?' : '돈이 어떻게 들어오나요?';
+    $('f-start').style.display = ex ? 'none' : '';
+    $('lump-label').textContent = ex ? '추가로 넣을 목돈 (지금 한 번)' : '목돈 (처음에 한 번)';
     const m = state.mode;
-    $('f-lump').style.display = m === 'annual' ? 'none' : '';
-    $('f-annual').style.display = m === 'lump' ? 'none' : '';
+    $('f-lump').style.display = (m === 'annual' || m === 'none') ? 'none' : '';
+    $('f-annual').style.display = (m === 'lump' || m === 'none') ? 'none' : '';
     $('f-total').style.display = m === 'annual' ? '' : 'none';
     $('f-years').style.display = m === 'both' ? '' : 'none';
-    $('sched-box').style.display = m === 'annual' ? 'none' : '';
+    $('sched-box').style.display = (m === 'annual' || m === 'none' || ex) ? 'none' : '';
     $('annual-label').textContent = m === 'both' ? '매년 추가 저축' : '연간 납입금';
     if (m === 'both' && num('lump') === 100000000 && num('annual') === 10000000) {
       // 목돈+적립 기본 예시: 목돈 5,000만 + 매년 1,200만 × 10년
@@ -637,7 +670,6 @@
     }
   }
   // ---------- 시작 연도 ----------
-  const today = new Date();
   (function () {
     const sel = $('start-year'), y0 = today.getFullYear();
     for (let y = y0; y <= y0 + 10; y++) sel.insertAdjacentHTML('beforeend', '<option value="' + y + '">' + y + '년</option>');
@@ -660,10 +692,11 @@
     const lab = g.previousElementSibling;
     if (lab && lab.classList.contains('label') && !lab.querySelector('.pick-badge')) lab.insertAdjacentHTML('beforeend', '<span class="pick-badge">하나 선택</span>');
   });
+  chipGroup('acct-chips', 'acct');
   chipGroup('mode-chips', 'mode');
   function monthNote() {
     const mo = state.openMonth, gap = mo === 1 ? 12 : 13 - mo, yrs = mo === 1 ? 3 : 4;
-    const existing = roomActive();
+    const existing = false;
     $('open-month-label').innerHTML = (existing ? '지금이 몇 월인가요' : 'ISA 개설 월') + '<span class="pick-badge">골라 주세요</span>';
     $('open-month-note').innerHTML = existing
       ? '기존 ISA에서는 다음 1월 새 한도가 <b>' + gap + '개월 뒤</b>에 생깁니다. 만기 후 새로 여는 ISA도 그 달 기준으로 이어집니다.'
@@ -681,9 +714,10 @@
       mode: state.mode,
       annual: state.mode === 'annual' ? Math.min(num('annual'), 20000000) : num('annual'),
       total: num('total'), lump: num('lump'), years: num('years'),
-      initialRoom: roomActive() ? Math.min(num('room'), 100000000) : 0,
-      firstMat: roomActive() ? firstMatMonths() : 0,
-      openMonth: state.openMonth, r, startYear: Number($('start-year').value) || today.getFullYear(),
+      existing: state.acct === 'existing' ? { value: num('ex-value'), principal: Math.min(num('ex-prin'), 100000000), room: existRoom() } : null,
+      firstMat: state.acct === 'existing' ? firstMatMonths() : 0,
+      openMonth: state.acct === 'existing' ? nowM : state.openMonth, r,
+      startYear: state.acct === 'existing' ? nowY : (Number($('start-year').value) || nowY),
       freeLimit: state.freeLimit, creditRate: state.creditRate, pensionRate: state.pensionRate,
       reinvest: $('reinvest').checked, horizon: num('horizon'),
     }, extra || {});
@@ -693,13 +727,14 @@
   function run() {
     syncStartYear();
     const base = params();
+    if (base.existing && base.existing.value <= 0 && base.mode === 'none') return;
     if (base.mode === 'annual' && (base.annual <= 0 || base.total <= 0)) return;
-    if (base.mode === 'lump' && base.lump <= 0) return;
-    if (base.mode === 'both' && (base.lump <= 0 && (base.annual <= 0 || base.years <= 0))) return;
+    if (base.mode === 'lump' && base.lump <= 0 && !base.existing) return;
+    if (base.mode === 'both' && !base.existing && (base.lump <= 0 && (base.annual <= 0 || base.years <= 0))) return;
     if (base.r < 0 || base.r > 0.5) return;
 
     let res, alt = null;
-    if (base.mode !== 'annual') {
+    if (base.mode !== 'annual' && base.mode !== 'none' && !base.existing) {
       // 두 방식 모두 같은 기간으로 맞춰 비교
       const other = state.openMonth === 1 ? 12 : 1; // 비교 상대: 1월 개설(선택이 1월이면 12월)
       const p1 = IsaEngine.simulate(Object.assign({}, base, { horizon: 0 }));
@@ -726,6 +761,7 @@
     const lastRow = res.years[res.years.length - 1];
     const endTxt = lastRow ? lastRow.label.replace(/년$/, '년 말') : '';
     $('start-hint').textContent = $('start-year').value + '년 ' + (state.mode === 'annual' ? 1 : state.openMonth) + '월 시작 → ' + endTxt + '에 전부 찾는 것으로 계산';
+    if (base.existing) $('horizon-hint').textContent += ' · 지금(' + nowY + '년 ' + nowM + '월) → ' + endTxt + '에 전부 찾음';
 
     // 판정
     const d1 = f.aPension - f.b, d2 = f.aOther - f.b;
@@ -745,8 +781,8 @@
     $('s-ao-sub').textContent = '기타소득세 16.5% · ' + fmtWon(f.aOther);
     $('s-b').textContent = fmt(f.b);
     $('s-b-sub').textContent = 'ISA 해지 시 9.9% 분리과세' + (f.bGen > 1 ? ' · 일반계좌 ' + fmt(f.bGenAfter) + ' 포함' : '') + ' · ' + fmtWon(f.b);
-    $('s-paid-label').textContent = state.mode === 'annual' ? '총 납입액' : '전략A가 ISA에 넣은 돈';
-    $('s-paid').textContent = fmt(f.paid);
+    $('s-paid-label').textContent = base.existing ? '기존 원금 + 추가로 넣은 돈' : (state.mode === 'annual' ? '총 납입액' : '전략A가 ISA에 넣은 돈');
+    $('s-paid').textContent = fmt(f.paid + (base.existing ? base.existing.principal : 0));
     $('s-paid-sub').textContent = (state.mode === 'annual' ? '' : '넣은 돈 ' + fmt(f.inflowTotal) + ' + 기다리는 동안 불어난 돈(세후) · ') + 'ISA 이전 ' + res.transfers.length + '회 · 세액공제 환급 ' + fmt(f.totalRefund);
 
     // 연도 경계 효과 박스
@@ -921,7 +957,6 @@
     $('insight-desc').innerHTML = desc;
   }
 
-  applyRoomBox();
   run();
   let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(run, 200); });
 })();

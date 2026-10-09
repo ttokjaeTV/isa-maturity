@@ -23,6 +23,7 @@
   // 들어오는 돈: [{m, amt}]
   function buildInflows(p) {
     const f = [];
+    if (p.mode === 'none') return f; // 기존 계좌만, 추가 납입 없음
     if (p.mode === 'annual') {
       let left = p.total;
       for (let k = 0; left > 0.5 && k < 60; k++) {
@@ -59,14 +60,15 @@
       openMonth: 0, schedule: 'yearly', r: 0.08, freeLimit: 2000000, isaTax: 0.099,
       creditRate: 0.132, pensionRate: 0.055, otherRate: 0.165, genTax: 0.154,
       reinvest: true, horizon: 0, excelRefund: false,
-      startYear: 2027, // 시작(개설) 연도 — 표·차트를 달력 연도로 표시할 때 사용
+      startYear: 2027,
+      existing: null,  // 지금 가진 ISA: { value: 평가액, principal: 넣은 원금, room: 지금 넣을 수 있는 한도 } // 시작(개설) 연도 — 표·차트를 달력 연도로 표시할 때 사용
       initialRoom: 0, // >0이면 첫 ISA에 이월 한도가 쌓여 있어 처음에 이만큼 넣을 수 있음(최대 1억)
       firstAge: 0,    // (옛 방식) 기존 ISA 가입 후 지난 개월 수 (0~35)
       firstMat: 0,    // 첫 ISA 해지·연금 전환까지 남은 개월 수 (0이면 36 − firstAge)
     }, p || {});
     if (!(P.openMonth >= 1 && P.openMonth <= 12)) P.openMonth = P.schedule === 'fast' ? 12 : 1;
     P.openMonth = Math.round(P.openMonth);
-    if (P.mode === 'annual') P.openMonth = 1;
+    if (P.mode === 'annual' && !P.existing) P.openMonth = 1;
     const g1 = Math.pow(1 + P.r, 1 / 12);
     const inflows = buildInflows(P);
     P.firstAge = Math.max(0, Math.min(35, Math.round(P.firstAge || 0)));
@@ -86,12 +88,15 @@
 
   function runCore(P, g1, inflows, endM, probe) {
     const isJan = m => (P.openMonth - 1 + m) % 12 === 0; // m개월 뒤가 1월인지 (m=0은 개설 달)
-    const firstRoom = P.initialRoom > 0 ? Math.min(Math.max(P.initialRoom, ISA_YEAR_LIMIT), ISA_TOTAL_LIMIT) : ISA_YEAR_LIMIT;
+    const EX = P.existing && (P.existing.value > 0 || P.existing.principal > 0) ? P.existing : null;
+    const firstRoom = EX ? Math.max(0, Math.min(EX.room || 0, ISA_TOTAL_LIMIT - (EX.principal || 0)))
+      : P.initialRoom > 0 ? Math.min(Math.max(P.initialRoom, ISA_YEAR_LIMIT), ISA_TOTAL_LIMIT) : ISA_YEAR_LIMIT;
     const m1 = P.firstMat;
     const isMat = m => m > 0 && m >= m1 && (m - m1) % 36 === 0;
     const A = { isa: 0, isaPrin: 0, room: firstRoom, openM: P.firstMat === 36 ? 0 : -1, pen: 0, penFree: 0,
       refundPot: 0, refundPotPrin: 0, refundCash: 0, gen: { v: 0, c: 0 }, paid: 0, transfers: [] };
     const B = { isa: 0, isaPrin: 0, room: firstRoom, gen: { v: 0, c: 0 }, paid: 0 };
+    if (EX) { A.isa = B.isa = EX.value || 0; A.isaPrin = B.isaPrin = EX.principal || 0; A.openM = -1; } // 같은 기존 계좌에서 출발
     const inMap = new Map();
     inflows.forEach(e => inMap.set(e.m, (inMap.get(e.m) || 0) + e.amt));
     let lastDepositA = -1, lastDepositB = -1, inflowTotal = 0, lumpDoneA = -1;
