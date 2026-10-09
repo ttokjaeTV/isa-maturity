@@ -353,6 +353,11 @@
         <div class="input-wrap"><input type="text" inputmode="numeric" id="horizon" value="" placeholder="자동"><span class="input-unit">년</span></div>
         <div class="input-hint" id="horizon-hint"></div>
       </div>
+      <div class="field">
+        <label class="label">시작 연도</label>
+        <select id="start-year"></select>
+        <div class="input-hint" id="start-hint"></div>
+      </div>
     </div>
   </div>
 
@@ -424,7 +429,7 @@
   </div>
 
   <div class="card" style="margin-top:12px">
-    <div class="chart-title">연차별 평가액 (세금 떼기 전)</div>
+    <div class="chart-title">연도별 평가액 (세금 떼기 전)</div>
     <div class="chart-subtitle">전략A는 ISA 잔액 + 연금저축 + 환급액, 전략B는 ISA 잔액 (+ 한도 밖 일반계좌). 마지막 해만 세금을 떼고 비교합니다.</div>
     <div class="chart-container"><canvas id="chart-line"></canvas></div>
   </div>
@@ -443,12 +448,12 @@
   </div>
 
   <div class="card">
-    <div class="chart-title">연차별 상세</div>
-    <div class="chart-subtitle">색칠된 줄 = 전략A의 ISA 만기(해지 → 연금저축 이전) 시점</div>
+    <div class="chart-title">연도별 상세</div>
+    <div class="chart-subtitle">매년 12월 말 기준 금액입니다. 색칠된 줄(★) = 그 해에 전략A의 ISA가 만기돼 해지 → 연금저축으로 옮긴 해</div>
     <div class="table-wrap">
       <table class="data-table">
         <thead>
-          <tr><th rowspan="2">연차</th><th colspan="7" class="g-a">전략A · 3년마다 연금저축 이전</th><th colspan="3" class="g-b">전략B · ISA 유지</th><th rowspan="2">A − B</th></tr>
+          <tr><th rowspan="2">연도</th><th colspan="7" class="g-a">전략A · 3년마다 연금저축 이전</th><th colspan="3" class="g-b">전략B · ISA 유지</th><th rowspan="2">A − B</th></tr>
           <tr><th>올해 납입</th><th>ISA 잔액</th><th>연금저축 이전액</th><th>ISA 세금</th><th>환급액</th><th>연금저축 잔액</th><th>A 평가액</th><th>ISA 잔액</th><th>일반계좌</th><th>B 평가액</th></tr>
         </thead>
         <tbody id="tbody"></tbody>
@@ -558,6 +563,7 @@
       openMonth: 0, schedule: 'yearly', r: 0.08, freeLimit: 2000000, isaTax: 0.099,
       creditRate: 0.132, pensionRate: 0.055, otherRate: 0.165, genTax: 0.154,
       reinvest: true, horizon: 0, excelRefund: false,
+      startYear: 2027, // 시작(개설) 연도 — 표·차트를 달력 연도로 표시할 때 사용
       initialRoom: 0, // >0이면 첫 ISA에 이월 한도가 쌓여 있어 처음에 이만큼 넣을 수 있음(최대 1억)
       firstAge: 0,    // (옛 방식) 기존 ISA 가입 후 지난 개월 수 (0~35)
       firstMat: 0,    // 첫 ISA 해지·연금 전환까지 남은 개월 수 (0이면 36 − firstAge)
@@ -614,9 +620,14 @@
         }
         A.isa = 0; A.isaPrin = 0; A.room = ISA_YEAR_LIMIT; A.openM = m;
       }
-      // (2) 연말 스냅샷
-      if (m > 0 && m % 12 === 0 && !probe) {
+      // (2) 달력 연말(다음 해 1월 직전) 스냅샷 + 마지막 달
+      if (m > 0 && (isJan(m) || m === endM) && !probe) {
+        const calIdx = P.openMonth - 1 + m, calYear = P.startYear + Math.floor(calIdx / 12), calMonth = calIdx % 12 + 1;
+        const prevM = years.length ? years[years.length - 1].m : 0;
+        const jan = isJan(m);
+        const label = jan ? (calYear - 1) + '년' : calYear + '년 ' + calMonth + '월';
         years.push({
+          m, months: m - prevM, label, calYear: jan ? calYear - 1 : calYear, isFinal: m === endM, partialStart: years.length === 0 && m < 12 ? P.openMonth : 0,
           year: m / 12,
           aIsa: A.isa, aPen: A.pen, aRefund: A.refundPot + A.refundCash, aGen: A.gen.v,
           aTotal: A.isa + A.pen + A.refundPot + A.refundCash + A.gen.v, aPaid: A.paid,
@@ -825,6 +836,25 @@
       $('lump').value = (50000000).toLocaleString(); $('annual').value = (12000000).toLocaleString();
     }
   }
+  // ---------- 시작 연도 ----------
+  const today = new Date();
+  (function () {
+    const sel = $('start-year'), y0 = today.getFullYear();
+    for (let y = y0; y <= y0 + 10; y++) sel.insertAdjacentHTML('beforeend', '<option value="' + y + '">' + y + '년</option>');
+  })();
+  let startYearTouched = false;
+  function defaultStartYear() {
+    // 고른 개설 달이 올해 이미 지났으면 내년
+    const mo = state.mode === 'annual' ? 1 : state.openMonth;
+    return today.getFullYear() + (mo < today.getMonth() + 1 ? 1 : 0);
+  }
+  function syncStartYear() { if (!startYearTouched) $('start-year').value = String(defaultStartYear()); }
+  $('start-year').addEventListener('change', () => { startYearTouched = true; run(); });
+  function rowLabel(y) {
+    if (y.partialStart && !y.isFinal) return y.label + ' <span style="color:var(--ink-mute);font-weight:600">(' + y.partialStart + '월~)</span>';
+    if (y.isFinal && /월$/.test(y.label)) return y.label + ' <span style="color:var(--ink-mute);font-weight:600">(종료)</span>';
+    return y.label;
+  }
   // 선택 칸 표시: 각 선택 그룹 제목 옆에 '하나 선택' 배지
   document.querySelectorAll('.chips').forEach(g => {
     const lab = g.previousElementSibling;
@@ -853,7 +883,7 @@
       total: num('total'), lump: num('lump'), years: num('years'),
       initialRoom: roomActive() ? Math.min(num('room'), 100000000) : 0,
       firstMat: roomActive() ? firstMatMonths() : 0,
-      openMonth: state.openMonth, r,
+      openMonth: state.openMonth, r, startYear: Number($('start-year').value) || today.getFullYear(),
       freeLimit: state.freeLimit, creditRate: state.creditRate, pensionRate: state.pensionRate,
       reinvest: $('reinvest').checked, horizon: num('horizon'),
     }, extra || {});
@@ -861,6 +891,7 @@
 
   // ---------- 계산 & 렌더 ----------
   function run() {
+    syncStartYear();
     const base = params();
     if (base.mode === 'annual' && (base.annual <= 0 || base.total <= 0)) return;
     if (base.mode === 'lump' && base.lump <= 0) return;
@@ -892,6 +923,9 @@
     $('horizon-hint').textContent = userH && userH < res.minShown
       ? '최소 ' + res.minShown + '년(마지막 ISA 만기)이라 ' + res.minShown + '년으로 계산'
       : (userH ? H + '년 뒤 전부 찾는다고 계산' : '자동: ' + H + '년 (마지막으로 넣은 ISA가 만기되는 해, 최소 3년). 더 길게 입력 가능');
+    const lastRow = res.years[res.years.length - 1];
+    const endTxt = lastRow ? lastRow.label.replace(/년$/, '년 말') : '';
+    $('start-hint').textContent = $('start-year').value + '년 ' + (state.mode === 'annual' ? 1 : state.openMonth) + '월 시작 → ' + endTxt + '에 전부 찾는 것으로 계산';
 
     // 판정
     const d1 = f.aPension - f.b, d2 = f.aOther - f.b;
@@ -899,7 +933,7 @@
     if (d1 > 0 && d2 > 0) title = '어떻게 찾든 <em>전략A(연금 이전)</em>가 유리합니다';
     else if (d1 > 0 && d2 <= 0) title = '연금으로 받으면 <em>전략A</em>, 목돈으로 찾으면 <em>전략B</em>가 유리합니다';
     else title = '이 조건에서는 <em>전략B(ISA 유지)</em>가 유리합니다';
-    $('v-label').textContent = H + '년 뒤 세후 자산 기준';
+    $('v-label').textContent = endTxt + ' 세후 자산 기준 (' + H + '년 뒤)';
     $('v-title').innerHTML = title;
     $('v-v1').textContent = (d1 >= 0 ? '전략A +' : '전략B +') + fmtLong(Math.abs(d1));
     $('v-v2').textContent = (d2 >= 0 ? '전략A +' : '전략B +') + fmtLong(Math.abs(d2));
@@ -944,7 +978,7 @@
       const isMat = y.tr > 0, isLast = i === res.years.length - 1;
       const diff = y.aTotal - y.bTotal;
       return '<tr class="' + (isMat ? 'maturity ' : '') + (isLast ? 'last' : '') + '">'
-        + '<td>' + y.year + '년' + (isMat ? ' ★' : '') + '</td>'
+        + '<td>' + rowLabel(y) + (isMat ? ' ★' : '') + '</td>'
         + '<td class="mute">' + fmtT(y.depA) + '</td>'
         + '<td class="a">' + fmtT(y.aIsa) + '</td>'
         + '<td class="a">' + fmtT(y.tr) + '</td>'
@@ -1013,7 +1047,7 @@
   };
 
   function renderCharts(res) {
-    const labels = res.years.map(y => y.year + '년');
+    const labels = res.years.map(y => y.label);
     const annualMode = state.mode === 'annual';
     const paid = res.years.map(y => y.inflowTotal);
     const mobile = window.innerWidth < 768;
@@ -1036,14 +1070,14 @@
           legend: { display: true, position: 'top', align: 'start', labels: { font: { family: 'Pretendard', size: 12, weight: 700 }, color: '#1A1A1A', usePointStyle: true, padding: 14, boxHeight: 6 } },
           datalabels: { display: false },
           tooltip: Object.assign({}, tooltipBase, { mode: 'index', intersect: false, itemSort: (a, b) => b.parsed.y - a.parsed.y,
-            callbacks: { title: it => it[0].label + ' 말', label: c => '  ' + c.dataset.label + ': ' + fmtLong(c.parsed.y) } }),
+            callbacks: { title: it => it[0].label + (/월$/.test(it[0].label) ? '' : ' 말'), label: c => '  ' + c.dataset.label + ': ' + fmtLong(c.parsed.y) } }),
         },
       },
       plugins: [endLabelPlugin],
     });
 
     const f = res.final;
-    $('bar-sub').textContent = res.H + '년 뒤 전부 찾을 때, 세금을 뗀 금액';
+    $('bar-sub').textContent = (res.years.length ? res.years[res.years.length - 1].label : res.H + '년 뒤') + ' 전부 찾을 때, 세금을 뗀 금액';
     if (barChart) barChart.destroy();
     barChart = new Chart($('chart-bar'), {
       type: 'bar',

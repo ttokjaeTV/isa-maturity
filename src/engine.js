@@ -59,6 +59,7 @@
       openMonth: 0, schedule: 'yearly', r: 0.08, freeLimit: 2000000, isaTax: 0.099,
       creditRate: 0.132, pensionRate: 0.055, otherRate: 0.165, genTax: 0.154,
       reinvest: true, horizon: 0, excelRefund: false,
+      startYear: 2027, // 시작(개설) 연도 — 표·차트를 달력 연도로 표시할 때 사용
       initialRoom: 0, // >0이면 첫 ISA에 이월 한도가 쌓여 있어 처음에 이만큼 넣을 수 있음(최대 1억)
       firstAge: 0,    // (옛 방식) 기존 ISA 가입 후 지난 개월 수 (0~35)
       firstMat: 0,    // 첫 ISA 해지·연금 전환까지 남은 개월 수 (0이면 36 − firstAge)
@@ -115,9 +116,14 @@
         }
         A.isa = 0; A.isaPrin = 0; A.room = ISA_YEAR_LIMIT; A.openM = m;
       }
-      // (2) 연말 스냅샷
-      if (m > 0 && m % 12 === 0 && !probe) {
+      // (2) 달력 연말(다음 해 1월 직전) 스냅샷 + 마지막 달
+      if (m > 0 && (isJan(m) || m === endM) && !probe) {
+        const calIdx = P.openMonth - 1 + m, calYear = P.startYear + Math.floor(calIdx / 12), calMonth = calIdx % 12 + 1;
+        const prevM = years.length ? years[years.length - 1].m : 0;
+        const jan = isJan(m);
+        const label = jan ? (calYear - 1) + '년' : calYear + '년 ' + calMonth + '월';
         years.push({
+          m, months: m - prevM, label, calYear: jan ? calYear - 1 : calYear, isFinal: m === endM, partialStart: years.length === 0 && m < 12 ? P.openMonth : 0,
           year: m / 12,
           aIsa: A.isa, aPen: A.pen, aRefund: A.refundPot + A.refundCash, aGen: A.gen.v,
           aTotal: A.isa + A.pen + A.refundPot + A.refundCash + A.gen.v, aPaid: A.paid,
