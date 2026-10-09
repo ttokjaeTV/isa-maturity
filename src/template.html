@@ -127,6 +127,24 @@
   .mini-table.cmp tr.sum td { font-weight: 800; }
   .mini-table td span.minus { color: var(--accent); }
   @media (max-width: 768px) { .tab { font-size: 16px; padding: 12px 12px; } .tab small { font-size: 11.5px; } .tabs { margin-bottom: 24px; } }
+  .be-box { background: var(--white); border: 1.5px solid var(--border); border-radius: 18px; padding: 22px 24px 20px; margin-bottom: 20px; }
+  .be-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+  .be-tag { background: var(--dark-warm); color: var(--white); font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 999px; letter-spacing: .5px; }
+  .be-title { font-size: 19px; font-weight: 800; letter-spacing: -0.4px; }
+  .be-title b { color: var(--accent); }
+  .be-track { position: relative; display: flex; height: 40px; border-radius: 10px; overflow: visible; margin: 34px 0 6px; }
+  .be-zone { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 800; overflow: hidden; white-space: nowrap; }
+  .be-zone.left { background: #F4D5C4; color: #A03D1F; border-radius: 10px 0 0 10px; }
+  .be-zone.right { background: #E3D3BC; color: #5A4A3D; border-radius: 0 10px 10px 0; }
+  .be-line { position: absolute; top: -6px; bottom: -6px; width: 0; border-left: 2.5px dashed var(--dark-warm); }
+  .be-line span { position: absolute; top: 56px; left: 0; transform: translateX(-50%); font-size: 12px; font-weight: 800; color: var(--dark-warm); white-space: nowrap; }
+  .be-mark { position: absolute; top: -30px; width: 0; }
+  .be-mark::after { content: ''; position: absolute; top: 20px; left: -7px; border: 7px solid transparent; border-top: 9px solid var(--accent); }
+  .be-mark span { position: absolute; top: 0; left: 0; transform: translateX(-50%); background: var(--accent); color: var(--white); font-size: 12px; font-weight: 800; padding: 2px 8px; border-radius: 6px; white-space: nowrap; }
+  .be-scale { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--ink-mute); font-weight: 600; margin-top: 10px; }
+  .be-desc { font-size: 14px; color: var(--ink-soft); font-weight: 500; line-height: 1.7; margin-top: 10px; }
+  .be-desc b { color: var(--ink); }
+  @media (max-width: 768px) { .be-box { padding: 18px 16px; } .be-title { font-size: 16px; } .be-zone { font-size: 11px; } }
   .verdict { background: var(--dark-warm); color: var(--white); border-radius: 20px; padding: 28px 32px; margin-bottom: 20px; }
   .verdict-label { font-size: 12px; font-weight: 800; letter-spacing: 1.5px; color: var(--accent-soft); margin-bottom: 10px; }
   .verdict-title { font-size: 28px; font-weight: 900; letter-spacing: -0.8px; line-height: 1.3; }
@@ -634,6 +652,17 @@
       <div class="verdict-row"><div class="k" id="d-v-k2"></div><div class="v" id="d-v-v2"></div></div>
     </div>
   </div>
+  <div class="be-box" id="d-be">
+    <div class="be-head"><span class="be-tag">기준점</span><span class="be-title" id="d-be-title"></span></div>
+    <div class="be-track" id="d-be-track">
+      <div class="be-zone left" id="d-be-left"><span>지금 해지가 유리</span></div>
+      <div class="be-zone right" id="d-be-right"><span>더 두는 게 유리</span></div>
+      <div class="be-line" id="d-be-line"><span id="d-be-line-lab"></span></div>
+      <div class="be-mark" id="d-be-mark"><span id="d-be-mark-lab"></span></div>
+    </div>
+    <div class="be-scale"><span>0%</span><span id="d-be-max"></span></div>
+    <div class="be-desc" id="d-be-desc"></div>
+  </div>
   <div class="grid-4" style="margin-bottom:20px">
     <div class="stat-card accent"><div class="stat-label" id="d-s1-label"></div><div class="stat-value" id="d-s1"></div><div class="stat-sub" id="d-s1-sub"></div></div>
     <div class="stat-card brown"><div class="stat-label" id="d-s2-label"></div><div class="stat-value" id="d-s2"></div><div class="stat-sub" id="d-s2-sub"></div></div>
@@ -661,6 +690,7 @@
       <li><strong>ISA 세금</strong>: 계좌 순이익 중 일반형 200만원·서민/농어민형 400만원 초과분에 9.9% 분리과세. 해지를 미뤄도 세율은 같습니다. 의무가입기간이 지나도 해지하지 않고 계좌를 계속 유지할 수 있습니다.</li>
       <li><strong>연금저축으로 옮기기</strong>: 해지 후 60일 안에 옮기면 전환금액의 10%(최대 300만원)를 세액공제. 환급액은 연금저축에 다시 넣어 굴립니다. N년 뒤부터 연금으로 받는다고 보고, 세액공제 받은 금액과 운용수익에 연금소득세를 매깁니다(연 1,500만원 이하 수령·연금수령 요건 충족 가정). 유지하는 쪽도 N년 뒤 해지해 옮기므로 세액공제를 똑같이 받습니다.</li>
       <li><strong>새 ISA + 일반계좌</strong>: 해지한 달에 새 ISA를 열어 그 달 2,000만원, 이후 매년 1월 2,000만원(이월)씩, 계좌당 1억원까지 넣습니다. 나머지는 일반계좌에서 기다립니다. 해외·채권형은 이익을 실현할 때 15.4%, 국내주식형은 매매차익 비과세·분배금만 15.4%로 계산했습니다.</li>
+      <li><strong>기준점</strong>: 원금·앞으로 수익률·기간·행선지·세율은 그대로 두고, 지금까지 쌓인 수익률(원금 대비)만 바꿔 가며 '더 두기'와 '지금 해지'의 세후 금액이 같아지는 지점을 찾은 값입니다.</li>
       <li><strong>세금을 미룬 효과</strong>: 지금 해지한 돈을 같은 9.9% 계좌에 다시 넣었다고 칠 때와 비교한 순수한 차이입니다. 지금 낼 세금이 N년 동안 더 굴러가 생기는 몫입니다.</li>
       <li><strong>빠진 것</strong>: 일반계좌 분배금·이익이 금융소득종합과세(연 2,000만원 초과)나 건강보험료에 미치는 영향, 매매 수수료·ETF 보수, 수익률 변동. 매년 같은 수익률을 가정한 단순 비교입니다.</li>
     </ul>
@@ -1193,6 +1223,54 @@
   }
   function calAfter(months) { const i = nowM - 1 + months; return (nowY + Math.floor(i / 12)) + '년 ' + (i % 12 + 1) + '월'; }
 
+
+  // 기준점: 다른 조건은 그대로 두고 '원금 대비 수익률'만 바꿨을 때 유지·해지 결과가 뒤집히는 지점
+  function breakEven(p) {
+    const P = p.principal, f = g => IsaEngine.deferral(Object.assign({}, p, { value: P * (1 + g) })).diff;
+    const LO = 0, HI = 30;
+    if (f(LO) >= 0) return { always: 'keep' };
+    if (f(HI) < 0) return { always: 'term' };
+    let lo = LO, hi = HI;
+    for (let i = 0; i < 50; i++) { const mid = (lo + hi) / 2; if (f(mid) < 0) lo = mid; else hi = mid; }
+    return { g: (lo + hi) / 2 };
+  }
+  function renderBreakEven(p, N, isa, when) {
+    const box = $('d-be');
+    if (!(p.principal > 0)) { box.style.display = 'none'; return; }
+    box.style.display = '';
+    const be = breakEven(p), cur = p.value / p.principal - 1, pct = x => Math.round(x * 100).toLocaleString() + '%';
+    const cond = '앞으로 수익률 ' + num('d-rate') + '%, ' + N + '년 더 두기, ' + (isa ? '새 ISA + 일반계좌(' + (dstate.genType === 'domestic' ? '국내주식형' : '해외·채권형') + ')' : '연금저축 · 연금소득세 ' + (dstate.pensionRate * 100).toFixed(1) + '%') + ' 기준';
+    const showTrack = !be.always;
+    $('d-be-track').style.display = showTrack ? '' : 'none';
+    document.querySelector('.be-scale').style.display = showTrack ? '' : 'none';
+    if (be.always === 'keep') {
+      $('d-be-title').innerHTML = '이 조건에선 수익률과 상관없이 <b>더 두는 쪽</b>이 유리합니다';
+      $('d-be-desc').innerHTML = '수익이 거의 없어도 유지가 앞섭니다. ' + (isa ? '지금 해지하면 새 ISA에 1년에 2,000만원씩만 들어가, 나머지가 일반계좌에서 세금을 내기 때문입니다.' : '') + '<br><small style="color:var(--ink-mute)">' + cond + '</small>';
+      return;
+    }
+    if (be.always === 'term') {
+      $('d-be-title').innerHTML = '이 조건에선 수익률 3,000%까지도 <b>지금 해지</b>가 유리합니다';
+      $('d-be-desc').innerHTML = '<small style="color:var(--ink-mute)">' + cond + '</small>';
+      return;
+    }
+    const g = be.g;
+    $('d-be-title').innerHTML = '원금 대비 수익률 <b>약 ' + pct(g) + '</b>를 넘으면 더 두는 쪽이 유리';
+    const max = Math.max(g * 2, cur * 1.15, 1);
+    const w = Math.min(100, g / max * 100), cw = Math.max(0, Math.min(100, cur / max * 100));
+    $('d-be-left').style.width = w + '%'; $('d-be-right').style.width = (100 - w) + '%';
+    $('d-be-line').style.left = w + '%'; $('d-be-line-lab').textContent = '기준 ' + pct(g);
+    $('d-be-mark').style.left = cw + '%'; $('d-be-mark-lab').textContent = '이 계좌 ' + pct(cur);
+    $('d-be-left').querySelector('span').style.visibility = w > 22 ? '' : 'hidden';
+    $('d-be-right').querySelector('span').style.visibility = (100 - w) > 22 ? '' : 'hidden';
+    const edge = x => 'translateX(' + (x > 88 ? -88 : x < 12 ? -12 : -50) + '%)';
+    $('d-be-mark-lab').style.transform = edge(cw); $('d-be-line-lab').style.transform = edge(w);
+    $('d-be-max').textContent = pct(max);
+    const gap = cur - g, side = gap >= 0 ? '<b>더 두는 쪽</b>' : '<b>지금 해지하는 쪽</b>';
+    $('d-be-desc').innerHTML = '원금 ' + fmtLong(p.principal) + ' 기준으로 평가액 <b>약 ' + fmtLong(p.principal * (1 + g)) + '</b>이 갈림길입니다. '
+      + '이 계좌는 지금 ' + pct(cur) + '로 기준보다 ' + Math.abs(Math.round(gap * 100)).toLocaleString() + '%p ' + (gap >= 0 ? '높아' : '낮아') + ' ' + side + '에 있습니다. '
+      + (isa ? '' : '쌓인 수익이 클수록 미룰 세금이 커지고(유지 유리), 계좌가 클수록 앞으로 수익에 붙는 세율 차이(9.9% vs 연금소득세)가 커집니다(이전 유리). ')
+      + '<br><small style="color:var(--ink-mute)">' + cond + ' · 수익률·기간·연금 받을 나이를 바꾸면 기준점도 바뀝니다.</small>';
+  }
   function runDefer() {
     const isa = dstate.dest === 'isa';
     $('d-pen-box').style.display = isa ? 'none' : '';
@@ -1243,6 +1321,8 @@
     $('d-s4-label').textContent = when + ' 해지 시 ISA 세금';
     $('d-s4').textContent = fmt(o.taxNow);
     $('d-s4-sub').textContent = N + '년 더 두면 ' + fmt(o.taxLater) + ' (계좌가 커진 만큼 늘어남)';
+
+    renderBreakEven(p, N, isa, when);
 
     // 세금표
     const row = (name, a, b, cls) => '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td>' + name + '</td><td>' + a + '</td><td>' + b + '</td></tr>';
