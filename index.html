@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ISA 만기 전략 계산기 | 똑재TV</title>
-<meta name="description" content="ISA 3년 만기마다 연금저축으로 옮길까, 그냥 계속 둘까? 세후 자산을 연차별로 비교하는 계산기">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<title>ISA 만기 전략 계산기 · 똑재TV</title>
+<meta name="description" content="ISA 의무가입기간(3년)을 채울 때마다 연금저축으로 옮길까, 그냥 계속 둘까? 세후 자산을 연차별로 비교하는 계산기">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 <style>
@@ -24,6 +24,8 @@
   .logo-name { font-size: 16px; font-weight: 900; letter-spacing: -0.3px; }
   .logo-sub { font-size: 10px; color: var(--ink-mute); font-weight: 700; letter-spacing: 1px; }
   .header-date { font-size: 12px; color: var(--ink-mute); font-weight: 600; }
+  .hub-back { display: inline-block; margin-bottom: 14px; font-size: 13px; font-weight: 600; color: var(--ink-mute); text-decoration: none; }
+  .hub-back:hover { color: var(--accent); }
 
   .hero { text-align: center; margin-bottom: 48px; }
   .tag { display: inline-flex; align-items: center; gap: 6px; background: var(--white); border: 1.5px solid var(--accent); color: var(--accent);
@@ -273,6 +275,7 @@
 <body>
 <div class="container">
 
+  <a href="https://ttokjaetv.github.io/" class="hub-back">← 똑재TV 계산기 모음</a>
   <header>
     <div class="logo">
       <div class="logo-icon">똑</div>
@@ -281,12 +284,12 @@
         <div class="logo-sub">ISA STRATEGY SIMULATOR</div>
       </div>
     </div>
-    <div class="header-date">세법 기준일 2026-10-08</div>
+    <div class="header-date">2026-10-08 세법 기준</div>
   </header>
 
   <div class="hero">
     <span class="tag"><span class="dot"></span>ISA 만기 전략 계산기</span>
-    <h1 class="hero-title">ISA 3년 만기,<br><span class="underline-mark">연금으로 옮길까</span> 그냥 둘까?</h1>
+    <h1 class="hero-title">ISA 3년 채우면,<br><span class="underline-mark">연금으로 옮길까</span> 그냥 둘까?</h1>
     <p class="hero-desc">
       3년마다 해지해서 연금저축으로 옮기는 전략과 ISA 하나를 끝까지 유지하는 전략을<br>
       같은 돈·같은 수익률로 굴려 세후 자산을 연차별로 비교해 드립니다.
@@ -386,7 +389,7 @@
 
     <div class="sub-box" id="sched-box">
       <div class="sub-title">ISA에 넣는 방식</div>
-      <div class="sub-desc">ISA 연간 한도(2,000만원)는 <strong>매년 1월 첫 영업일</strong>에 새로 생기고(안 쓴 한도는 이월), 만기는 <strong>가입일부터 3년</strong>입니다. 그래서 몇 월에 여느냐에 따라 다음 한도가 생기기까지 걸리는 시간이 달라집니다. 한도를 넘는 돈은 일반계좌에서 기다렸다가 한도가 생기는 대로 ISA로 옮기고, 만기에 해지하면 바로 새 ISA를 엽니다.</div>
+      <div class="sub-desc">ISA 연간 한도(2,000만원)는 <strong>매년 1월 첫 영업일</strong>에 새로 생기고(안 쓴 한도는 이월), 의무가입기간은 <strong>가입일부터 3년</strong>입니다. 그래서 몇 월에 여느냐에 따라 다음 한도가 생기기까지 걸리는 시간이 달라집니다. 한도를 넘는 돈은 일반계좌에서 기다렸다가 한도가 생기는 대로 ISA로 옮기고, 3년이 차서 해지하면 바로 새 ISA를 엽니다.</div>
       <div class="month-row">
         <div class="field">
           <label class="label" id="open-month-label">ISA 개설 월</label>
@@ -423,14 +426,14 @@
         <label class="label">ISA 유형 (비과세 한도)</label>
         <div class="chips" id="free-chips">
           <button class="chip on" data-v="2000000">일반형<small>200만원</small></button>
-          <button class="chip" data-v="4000000">서민·농어민형<small>400만원</small></button>
+          <button class="chip" data-v="4000000">서민형·농어민형<small>400만원</small></button>
         </div>
       </div>
       <div>
         <label class="label">연금저축 세액공제율</label>
         <div class="chips" id="credit-chips">
-          <button class="chip" data-v="0.165">16.5%<small>총급여 5,500만원 이하</small></button>
-          <button class="chip on" data-v="0.132">13.2%<small>총급여 5,500만원 초과</small></button>
+          <button class="chip" data-v="0.165">16.5%<small>총급여 5,500만원(종합소득금액 4,500만원) 이하</small></button>
+          <button class="chip on" data-v="0.132">13.2%<small>총급여 5,500만원(종합소득금액 4,500만원) 초과</small></button>
         </div>
       </div>
       <div>
@@ -503,7 +506,7 @@
 
   <div class="card">
     <div class="chart-title">연도별 상세</div>
-    <div class="chart-subtitle">매년 12월 말 기준 금액입니다. 색칠된 줄(★) = 그 해에 전략A의 ISA가 만기돼 해지 → 연금저축으로 옮긴 해</div>
+    <div class="chart-subtitle">매년 12월 말 기준 금액입니다. 색칠된 줄(★) = 그 해에 전략A의 ISA가 3년을 채워 해지 → 연금저축으로 옮긴 해</div>
     <div class="table-wrap">
       <table class="data-table">
         <thead>
@@ -518,15 +521,15 @@
 
   <div class="card">
     <div class="chart-title">계산 가정</div>
-    <div class="chart-subtitle">현행 세법 기준 (2026-10-08 확인)</div>
+    <div class="chart-subtitle">2026-10-08 세법 기준</div>
     <ul class="assume">
-      <li><strong>ISA 비과세·분리과세</strong>: 순이익 중 일반형 200만원·서민/농어민형 400만원까지 비과세, 초과분 9.9%(지방소득세 포함) 분리과세. 연 납입 2,000만원(미사용분 이월), 계좌당 총 1억원.</li>
+      <li><strong>ISA 비과세·분리과세</strong>: 순이익 중 일반형 200만원·서민형·농어민형 400만원까지 비과세, 초과분 9.9%(지방소득세 포함) 분리과세. 연 납입 2,000만원(미사용분 이월), 계좌당 총 1억원.</li>
       <li><strong>연금 전환 세액공제</strong>: ISA 만기 후 60일 이내 연금계좌로 옮기면 전환금액의 10%(최대 300만원)를 기존 세액공제 한도에 더해 공제. 환급액은 이전한 해에 받는 것으로 단순화했습니다(실제로는 다음 해 연말정산).</li>
-      <li><strong>연금저축 과세</strong>: 세액공제 안 받은 원금은 비과세, 세액공제 받은 원금과 운용수익은 연금으로 받으면 연금소득세(55~69세 5.5%, 70~79세 4.4%, 80세~ 3.3%), 연금 외로 한 번에 찾으면 기타소득세 16.5%.</li>
-      <li><strong>연금 수령 한도</strong>: 사적연금을 연 1,500만원 넘게 받으면 그 해 전체를 종합과세하거나 16.5% 분리과세 중 고릅니다. 이 계산은 1,500만원 이하로 나눠 받는다고 보고 연금소득세율을 적용합니다. 55세 이후·가입 5년 경과 등 연금수령 요건은 충족한다고 가정합니다.</li>
+      <li><strong>연금저축 과세</strong>: 세액공제 안 받은 원금은 비과세, 세액공제 받은 원금과 운용수익은 연금으로 받으면 연금소득세(55~69세 5.5%, 70~79세 4.4%, 80세~ 3.3%, 연금 받는 날 기준 나이), 연금 외로 한 번에 찾으면 기타소득세 16.5%.</li>
+      <li><strong>연 1,500만원 기준</strong>: 연금계좌에서 연금으로 받는 돈 중 세액공제 받은 원금과 운용수익이 연 1,500만원을 넘으면(세액공제 받지 않은 원금은 이 계산에서 빠짐) 그 해 전체를 종합과세하거나 16.5% 분리과세 중 고릅니다. 이 계산은 1,500만원 이하로 나눠 받는다고 보고 연금소득세율을 적용합니다. 55세 이후·가입 5년 경과 등 연금수령 요건은 충족한다고 가정합니다.</li>
       <li><strong>납입 한도</strong>: 계좌를 연 달에 그 해 2,000만원, 매년 1월에 2,000만원씩 한도가 생깁니다. 한도를 넘는 돈은 일반계좌에서 기다렸다가 한도가 생기는 대로 옮깁니다. <strong>지금 가진 ISA로 계산</strong>하면 지금(오늘 날짜의 연·월)부터 계산합니다. 남은 한도는 가입한 해부터 올해까지 매년 2,000만원에서 넣은 원금을 뺀 값(계좌당 1억원 상한)으로 자동 계산하고, 첫 해지는 가입 3년이 차는 때(3년이 지났으면 입력한 시점)로 봅니다. 의무가입기간이 지난 계좌는 언제 해지해도 60일 안에 연금계좌로 옮길 수 있습니다. 전략B는 이 계좌를 끝까지 유지하고, 전략A는 첫 해지 때 연금저축으로 옮긴 뒤 새 ISA를 3년마다 엽니다.</li>
       <li><strong>전략B</strong>: ISA 하나를 끝까지 유지하고 운용 종료 시점에 해지합니다. 총 납입 1억원을 넘는 돈은 일반계좌에 둡니다.</li>
-      <li><strong>일반계좌</strong>(목돈 대기자금·B의 한도 초과분): 같은 수익률로 운용하고, 이익을 실현할 때 15.4% 과세(국내상장 해외 ETF 기준). 금융소득종합과세·건강보험료는 반영하지 않았습니다.</li>
+      <li><strong>일반계좌</strong>(목돈 대기자금·B의 한도 초과분): 같은 수익률로 운용하고, 이익을 실현할 때 15.4% 과세(국내상장 해외 ETF 기준). 실제로는 매매차익과 과표기준가 증가분 중 작은 금액에 과세되는데, 이 계산은 이익 전체에 15.4%를 매기는 것으로 단순화했습니다. 금융소득종합과세·건강보험료는 반영하지 않았습니다.</li>
       <li><strong>그 밖에 빠진 것</strong>: 매매 수수료·ETF 보수, 수익률 변동, 중도 인출, 연금 수령 기간 중 운용수익. 매년 같은 수익률이 나온다고 가정한 단순 비교입니다.</li>
       <li>2026년 8월 세제개편안에 있던 일반 ISA 계약기간 5년 제한·납입한도 이월 폐지는 9월 1일 정부안 확정 때 철회되어, 현행 제도를 기준으로 계산합니다.</li>
     </ul>
@@ -584,7 +587,7 @@
         <label class="label">ISA 유형 (비과세 한도)</label>
         <div class="chips" id="d-free-chips">
           <button class="chip on" data-v="2000000">일반형<small>200만원</small></button>
-          <button class="chip" data-v="4000000">서민·농어민형<small>400만원</small></button>
+          <button class="chip" data-v="4000000">서민형·농어민형<small>400만원</small></button>
         </div>
       </div>
     </div>
@@ -610,8 +613,8 @@
         <div>
           <label class="label">연금저축 세액공제율</label>
           <div class="chips" id="d-credit-chips">
-            <button class="chip" data-v="0.165">16.5%<small>총급여 5,500만원 이하</small></button>
-            <button class="chip on" data-v="0.132">13.2%<small>총급여 5,500만원 초과</small></button>
+            <button class="chip" data-v="0.165">16.5%<small>총급여 5,500만원(종합소득금액 4,500만원) 이하</small></button>
+            <button class="chip on" data-v="0.132">13.2%<small>총급여 5,500만원(종합소득금액 4,500만원) 초과</small></button>
           </div>
         </div>
         <div>
@@ -684,12 +687,12 @@
   </div>
   <div class="card">
     <div class="chart-title">계산 가정</div>
-    <div class="chart-subtitle">현행 세법 기준 (2026-10-08 확인)</div>
+    <div class="chart-subtitle">2026-10-08 세법 기준</div>
     <ul class="assume">
       <li><strong>해지 기준 시점</strong>: 가입 3년이 지난 계좌는 지금, 3년이 안 된 계좌는 3년이 차는 달에 해지하는 것을 '지금 해지'로 봅니다(중도해지하면 비과세 혜택이 없어지므로). 그때까지 평가액은 두 경우가 같습니다.</li>
-      <li><strong>ISA 세금</strong>: 계좌 순이익 중 일반형 200만원·서민/농어민형 400만원 초과분에 9.9% 분리과세. 해지를 미뤄도 세율은 같습니다. 의무가입기간이 지나도 해지하지 않고 계좌를 계속 유지할 수 있습니다.</li>
+      <li><strong>ISA 세금</strong>: 계좌 순이익 중 일반형 200만원·서민형·농어민형 400만원 초과분에 9.9% 분리과세. 해지를 미뤄도 세율은 같습니다. 의무가입기간이 지나도 해지하지 않고 계좌를 계속 유지할 수 있습니다.</li>
       <li><strong>연금저축으로 옮기기</strong>: 해지 후 60일 안에 옮기면 전환금액의 10%(최대 300만원)를 세액공제. 환급액은 연금저축에 다시 넣어 굴립니다. N년 뒤부터 연금으로 받는다고 보고, 세액공제 받은 금액과 운용수익에 연금소득세를 매깁니다(연 1,500만원 이하 수령·연금수령 요건 충족 가정). 유지하는 쪽도 N년 뒤 해지해 옮기므로 세액공제를 똑같이 받습니다.</li>
-      <li><strong>새 ISA + 일반계좌</strong>: 해지한 달에 새 ISA를 열어 그 달 2,000만원, 이후 매년 1월 2,000만원(이월)씩, 계좌당 1억원까지 넣습니다. 나머지는 일반계좌에서 기다립니다. 해외·채권형은 이익을 실현할 때 15.4%, 국내주식형은 매매차익 비과세·분배금만 15.4%로 계산했습니다.</li>
+      <li><strong>새 ISA + 일반계좌</strong>: 해지한 달에 새 ISA를 열어 그 달 2,000만원, 이후 매년 1월 2,000만원(이월)씩, 계좌당 1억원까지 넣습니다. 나머지는 일반계좌에서 기다립니다. 해외·채권형은 이익을 실현할 때 15.4%(실제로는 매매차익과 과표기준가 증가분 중 작은 금액 기준, 여기서는 이익 전체로 단순화), 국내주식형은 매매차익 비과세·분배금만 15.4%로 계산했습니다.</li>
       <li><strong>기준점</strong>: 원금·앞으로 수익률·기간·행선지·세율은 그대로 두고, 지금까지 쌓인 수익률(원금 대비)만 바꿔 가며 '더 두기'와 '지금 해지'의 세후 금액이 같아지는 지점을 찾은 값입니다.</li>
       <li><strong>세금을 미룬 효과</strong>: 지금 해지한 돈을 같은 9.9% 계좌에 다시 넣었다고 칠 때와 비교한 순수한 차이입니다. 지금 낼 세금이 N년 동안 더 굴러가 생기는 몫입니다.</li>
       <li><strong>빠진 것</strong>: 일반계좌 분배금·이익이 금융소득종합과세(연 2,000만원 초과)나 건강보험료에 미치는 영향, 매매 수수료·ETF 보수, 수익률 변동. 매년 같은 수익률을 가정한 단순 비교입니다.</li>
@@ -1164,7 +1167,7 @@
     $('open-month-label').innerHTML = (existing ? '지금이 몇 월인가요' : annualMode ? 'ISA 개설 월 (매년 넣는 달)' : 'ISA 개설 월') + '<span class="pick-badge">골라 주세요</span>';
     $('open-month-note').innerHTML = existing
       ? '기존 ISA에서는 다음 1월 새 한도가 <b>' + gap + '개월 뒤</b>에 생깁니다. 만기 후 새로 여는 ISA도 그 달 기준으로 이어집니다.'
-      : annualMode ? '개설한 달에 첫 납입을 하고, 이후 <b>매년 ' + mo + '월</b>에 연간 납입금을 넣는 것으로 계산합니다. 3년 만기도 ' + mo + '월이라, 해지하고 새 ISA를 열어 그달 납입을 이어갑니다.' + (mo === 1 ? ' 매년 1월 한 번씩 넣는 엑셀 방식과 같습니다.' : '')
+      : annualMode ? '개설한 달에 첫 납입을 하고, 이후 <b>매년 ' + mo + '월</b>에 연간 납입금을 넣는 것으로 계산합니다. 3년이 차는 달도 ' + mo + '월이라, 해지하고 새 ISA를 열어 그달 납입을 이어갑니다.' + (mo === 1 ? ' 매년 1월 한 번씩 넣는 엑셀 방식과 같습니다.' : '')
       : '처음 2,000만원은 개설할 때, 다음 2,000만원은 <b>' + gap + '개월 뒤</b> 1월에 생깁니다. 3년 동안 <b>' + yrs + '개 연도 한도(최대 ' + (yrs * 2) + ',000만원)</b>를 씁니다.'
         + (mo === 12 ? ' 다음 한도가 가장 빨리 생기는 달입니다.' : mo === 1 ? ' 매년 1월 한 번씩 넣는 엑셀 방식과 같습니다.' : '');
   }
@@ -1221,8 +1224,8 @@
     const userH = num('horizon');
     $('horizon-hint').className = 'input-hint' + (userH && userH < res.minShown ? ' warn' : '');
     $('horizon-hint').textContent = userH && userH < res.minShown
-      ? '최소 ' + res.minShown + '년(마지막 ISA 만기)이라 ' + res.minShown + '년으로 계산'
-      : (userH ? H + '년 뒤 전부 찾는다고 계산' : '자동: ' + H + '년 (마지막으로 넣은 ISA가 만기되는 해, 최소 3년). 더 길게 입력 가능');
+      ? '최소 ' + res.minShown + '년(마지막 ISA가 3년을 채우는 해)이라 ' + res.minShown + '년으로 계산'
+      : (userH ? H + '년 뒤 전부 찾는다고 계산' : '자동: ' + H + '년 (마지막으로 넣은 ISA가 3년을 채우는 해, 최소 3년). 더 길게 입력 가능');
     const lastRow = res.years[res.years.length - 1];
     const endTxt = lastRow ? lastRow.label.replace(/년$/, '년 말') : '';
     $('start-hint').textContent = $('start-year').value + '년 ' + state.openMonth + '월 시작 → ' + endTxt + '에 전부 찾는 것으로 계산';
@@ -1552,7 +1555,7 @@
     if (!v || p.r < 0 || p.r > 0.5) return;
 
     const o = IsaEngine.deferral(p), t = o.term, k = o.keep;
-    const gain0 = o.V0 - p.principal, when = p.wait0 > 0 ? '만기(' + calAfter(p.wait0) + ')' : '지금';
+    const gain0 = o.V0 - p.principal, when = p.wait0 > 0 ? calAfter(p.wait0) + '에' : '지금';
     const ret = p.principal > 0 ? Math.round(gain0 / p.principal * 100) : 0;
     $('d-summary').innerHTML = (p.wait0 > 0
         ? '가입 3년이 안 돼 지금 해지하면 비과세 혜택이 사라집니다. 그래서 3년이 차는 <b>' + calAfter(p.wait0) + '</b>을 기준으로 비교합니다. 그때 평가액 <b>' + fmtLong(o.V0) + '</b>(예상) · '
@@ -1562,12 +1565,12 @@
       + (o.taxNow > 0 ? ' <small style="color:var(--ink-mute)">(비과세 ' + fmt(p.freeLimit) + '원 넘는 ' + fmtLong(gain0 - p.freeLimit) + ' × 9.9%)</small>' : '');
 
     const destName = isa ? '새 ISA + 일반계좌' : '연금저축';
-    const nowLabel = (p.wait0 > 0 ? '만기에' : '지금') + ' 해지 → ' + destName;
+    const nowLabel = (p.wait0 > 0 ? '3년 채우고' : '지금') + ' 해지 → ' + destName;
     const keepLabel = N + '년 더 두고 해지' + (isa ? '' : ' → 연금저축');
     const d = o.diff;
     $('d-v-title').innerHTML = Math.abs(d) < 100000 ? '두 방법의 차이가 <em>거의 없습니다</em> (' + fmtLong(Math.abs(d)) + ')'
       : d > 0 ? '<em>' + N + '년 더 두는 쪽</em>이 ' + fmtLong(d) + ' 앞섭니다'
-      : '<em>' + (p.wait0 > 0 ? '만기에' : '지금') + ' 해지해 ' + (isa ? '새 ISA로 갈아타는' : '연금저축으로 옮기는') + ' 쪽</em>이 ' + fmtLong(-d) + ' 앞섭니다';
+      : '<em>' + (p.wait0 > 0 ? '3년 채우고' : '지금') + ' 해지해 ' + (isa ? '새 ISA로 갈아타는' : '연금저축으로 옮기는') + ' 쪽</em>이 ' + fmtLong(-d) + ' 앞섭니다';
     $('d-v-k1').textContent = nowLabel; $('d-v-v1').textContent = fmtLong(t.final);
     $('d-v-k2').textContent = keepLabel; $('d-v-v2').textContent = fmtLong(k.final);
 
@@ -1631,7 +1634,7 @@
     let title, desc;
     if (Math.abs(d) < 100000) title = '이 조건에선 언제 해지하든 결과가 비슷합니다.';
     else if (d > 0) title = N + '년 더 두면 ' + fmtLong(d) + ' 더 남습니다. 미룬 세금이 계좌 안에서 더 굴러간 덕분입니다.';
-    else title = (p.wait0 > 0 ? '만기에' : '지금') + ' 해지해 ' + (isa ? '새 ISA로 갈아타는' : '연금저축으로 옮기는') + ' 쪽이 ' + fmtLong(-d) + ' 더 남습니다.';
+    else title = (p.wait0 > 0 ? '3년 채우고' : '지금') + ' 해지해 ' + (isa ? '새 ISA로 갈아타는' : '연금저축으로 옮기는') + ' 쪽이 ' + fmtLong(-d) + ' 더 남습니다.';
     desc = 'ISA 세금은 비과세 한도를 넘는 수익에 <strong>9.9% 정률</strong>이라, 해지를 미뤄도 세율이 낮아지지는 않습니다. 미루는 효과는 ' + when + ' 낼 세금 <strong>' + fmtLong(o.taxNow) + '</strong>을 ' + N + '년 더 계좌 안에서 굴리는 몫, 이 조건에서 <strong>' + fmtLong(o.deferValue) + '</strong>입니다. 수익이 클수록 지금 낼 세금이 커져 이 몫도 커집니다. ';
     if (isa) desc += '반대로 ' + when + ' 해지하면 새 ISA에는 1년에 2,000만원씩만 들어가서, 나머지 돈이 일반계좌에서 기다리는 동안 세금 <strong>' + fmtLong(t.genTax) + '</strong>이 붙습니다'
       + (dstate.genType === 'overseas' ? '(국내주식형으로 굴리면 매매차익이 비과세라 이 부담이 크게 줄어듭니다)' : '') + '. 비과세 한도를 한 번 더 쓰는 이득은 ' + fmtLong(o.allowValue) + '입니다.';
