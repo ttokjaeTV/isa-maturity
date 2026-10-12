@@ -92,8 +92,12 @@
   .age-row .input-wrap input { padding-right: 52px; }
   select { background: var(--white); border: 2px solid var(--border); border-radius: 12px; padding: 14px 16px; min-height: 56px; font-family: inherit; font-size: 18px; color: var(--ink); font-weight: 700; width: 100%; cursor: pointer; }
   select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .month-row { display: grid; grid-template-columns: 220px 1fr; gap: 16px; align-items: end; }
-  .month-note { font-size: 13px; color: var(--ink-soft); font-weight: 600; line-height: 1.6; background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
+  .rule-list { list-style: none; margin: 4px 0 18px; padding: 0; display: grid; gap: 6px; }
+  .rule-list li { position: relative; padding-left: 14px; word-break: keep-all; font-size: 13px; color: var(--ink-soft); font-weight: 500; line-height: 1.55; }
+  .rule-list li::before { content: ''; position: absolute; left: 2px; top: 0.62em; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+  .rule-list li b { color: var(--ink); font-weight: 700; }
+  .month-row { display: grid; grid-template-columns: 180px 1fr; gap: 12px; align-items: stretch; }
+  .month-note { word-break: keep-all; display: flex; align-items: center; min-height: 56px; box-sizing: border-box; font-size: 13px; color: var(--ink-soft); font-weight: 600; line-height: 1.55; background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 10px 16px; }
   .month-note b { color: var(--accent); }
   @media (max-width: 768px) { .month-row { grid-template-columns: 1fr; gap: 10px; } }
   .exist-box { margin-top: 14px; border: 1.5px solid var(--accent); border-radius: 14px; padding: 16px 18px; background: #FBF1E9; }
@@ -415,12 +419,16 @@
     </div>
 
     <div class="sub-box" id="sched-box">
-      <div class="sub-title">ISA에 넣는 방식</div>
-      <div class="sub-desc">ISA 연간 한도(2,000만원)는 <strong>매년 1월 첫 영업일</strong>에 새로 생기고(안 쓴 한도는 이월), 의무가입기간은 <strong>가입일부터 3년</strong>입니다. 그래서 몇 월에 여느냐에 따라 다음 한도가 생기기까지 걸리는 시간이 달라집니다. 한도를 넘는 돈은 일반계좌에서 기다렸다가 한도가 생기는 대로 ISA로 옮기고, 3년이 차서 해지하면 바로 새 ISA를 엽니다.</div>
+      <div class="sub-title">ISA를 여는 달</div>
+      <ul class="rule-list">
+        <li><b>연간 한도 2,000만원</b>은 매년 1월에 새로 생깁니다 (안 쓴 한도는 이월)</li>
+        <li><b>의무가입 3년</b>은 가입한 달부터 셉니다. 그래서 여는 달에 따라 한도를 채우는 속도가 달라집니다</li>
+        <li>한도를 넘는 돈은 일반계좌에서 기다렸다가 옮기고, 만기에 해지하면 바로 새 ISA를 엽니다</li>
+      </ul>
+      <label class="label" id="open-month-label">ISA 개설 월</label>
       <div class="month-row">
         <div class="field">
-          <label class="label" id="open-month-label">ISA 개설 월</label>
-          <select id="open-month">
+          <select id="open-month" aria-labelledby="open-month-label">
             <option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option>
             <option value="5">5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option>
             <option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12" selected>12월</option>
@@ -973,10 +981,10 @@
     const annualMode = state.mode === 'annual';
     $('open-month-label').innerHTML = (existing ? '지금이 몇 월인가요' : annualMode ? 'ISA 개설 월 (매년 넣는 달)' : 'ISA 개설 월') + '<span class="pick-badge">골라 주세요</span>';
     $('open-month-note').innerHTML = existing
-      ? '기존 ISA에서는 다음 1월 새 한도가 <b>' + gap + '개월 뒤</b>에 생깁니다. 만기 후 새로 여는 ISA도 그 달 기준으로 이어집니다.'
-      : annualMode ? '개설한 달에 첫 납입을 하고, 이후 <b>매년 ' + mo + '월</b>에 연간 납입금을 넣는 것으로 계산합니다. 3년이 차는 달도 ' + mo + '월이라, 해지하고 새 ISA를 열어 그달 납입을 이어갑니다.' + (mo === 1 ? ' 매년 1월 한 번씩 넣는 엑셀 방식과 같습니다.' : '')
-      : '처음 2,000만원은 개설할 때, 다음 2,000만원은 <b>' + gap + '개월 뒤</b> 1월에 생깁니다. 3년 동안 <b>' + yrs + '개 연도 한도(최대 ' + (yrs * 2) + ',000만원)</b>를 씁니다.'
-        + (mo === 12 ? ' 다음 한도가 가장 빨리 생기는 달입니다.' : mo === 1 ? ' 매년 1월 한 번씩 넣는 엑셀 방식과 같습니다.' : '');
+      ? '<span>기존 ISA에서는 다음 1월 새 한도가 <b>' + gap + '개월 뒤</b>에 생깁니다. 만기 후 새로 여는 ISA도 그 달 기준으로 이어집니다.</span>'
+      : annualMode ? '<span><b>매년 ' + mo + '월</b>에 연간 납입금을 넣습니다. 만기도 ' + mo + '월이라 해지 후 새 ISA를 열어 그달 납입을 이어갑니다.' + (mo === 1 ? ' (매년 1월 한 번 넣는 엑셀 방식과 같음)' : '') + '</span>'
+      : '<span>개설할 때 2,000만원, <b>' + gap + '개월 뒤</b> 1월에 다음 2,000만원이 생깁니다. 3년 동안 <b>' + yrs + '개 연도 한도(최대 ' + (yrs * 2) + ',000만원)</b>를 씁니다.'
+        + (mo === 12 ? ' 다음 한도가 가장 빨리 생기는 달입니다.' : mo === 1 ? ' (매년 1월 한 번 넣는 엑셀 방식과 같음)' : '') + '</span>';
   }
   $('open-month').addEventListener('change', () => { state.openMonth = Number($('open-month').value); run(); });
   chipGroup('free-chips', 'freeLimit', Number);
