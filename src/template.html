@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<script src="https://ttokjaetv.github.io/member-lock.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ISA 만기 전략 계산기 · 똑재TV</title>
 <meta name="description" content="ISA 의무가입기간(3년)을 채울 때마다 연금저축으로 옮길까, 그냥 계속 둘까? 세후 자산을 연차별로 비교하는 계산기">
@@ -340,7 +341,7 @@
 
   <div class="tabs" id="tabs">
     <button class="tab on" data-t="main">만기 전략 비교<small>3년마다 연금 이전 vs ISA 유지</small></button>
-    <button class="tab" data-t="defer">해지 타이밍 비교<small>지금 해지 vs 몇 년 더 두기</small></button>
+    <button class="tab" data-t="defer" data-member-click="해지 타이밍 비교">해지 타이밍 비교<small>지금 해지 vs 몇 년 더 두기</small></button>
   </div>
 
   <div id="tab-main">
@@ -350,7 +351,7 @@
     <label class="label">어떤 ISA로 계산할까요?</label>
     <div class="chips" id="acct-chips">
       <button class="chip on" data-v="new">새로 ISA 만들기<small>새 계좌를 열어 처음부터</small></button>
-      <button class="chip" data-v="existing">지금 가진 ISA로 계산<small>이미 넣어 둔 돈이 있는 계좌</small></button>
+      <button class="chip" data-v="existing" data-member-click="지금 가진 ISA로 계산">지금 가진 ISA로 계산<small>이미 넣어 둔 돈이 있는 계좌</small></button>
     </div>
 
     <div class="exist-box" id="exist-box" style="display:none">
@@ -539,14 +540,14 @@
     <div class="card">
       <div class="chart-title">세금은 어디서 얼마나 나가나</div>
       <div class="chart-subtitle">운용 종료 시점까지 낸 세금과 받은 환급</div>
-      <table class="mini-table" id="tax-table"></table>
+      <div data-member="세금 표"><table class="mini-table" id="tax-table"></table></div>
     </div>
   </div>
 
   <div class="card">
     <div class="chart-title">연도별 상세</div>
     <div class="chart-subtitle">매년 12월 말 기준 금액입니다. 색칠된 줄(★) = 그 해에 전략A의 ISA가 3년을 채워 해지 → 연금저축으로 옮긴 해</div>
-    <div class="table-wrap">
+    <div class="table-wrap" data-member="연도별 상세표">
       <table class="data-table">
         <thead>
           <tr><th rowspan="2">연도</th><th colspan="7" class="g-a">전략A · 3년마다 연금저축 이전</th><th colspan="3" class="g-b">전략B · ISA 유지</th><th rowspan="2">A − B</th></tr>
@@ -1524,7 +1525,13 @@
   $('copy-main').addEventListener('click', () => { const t = mainCopyText(); if (t) copyText(t, $('copy-main')); });
   $('copy-defer').addEventListener('click', () => { const t = deferCopyText(); if (t) copyText(t, $('copy-defer')); });
 
-  if (location.hash === '#timing') document.querySelector('#tabs .tab[data-t="defer"]').click();
+  if (location.hash === '#timing') {
+    // 멤버십 잠금: 잠긴 상태로 #timing 링크를 열면 첫 탭에 머물고 안내만 띄운다
+    if (window.TJLock && TJLock.locked()) {
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+      TJLock.prompt('해지 타이밍 비교');
+    } else document.querySelector('#tabs .tab[data-t="defer"]').click();
+  }
 
   run();
   let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if ($('tab-defer').style.display === 'none') run(); else runDefer(); }, 200); });
