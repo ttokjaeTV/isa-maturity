@@ -76,13 +76,18 @@
     const m1 = P.firstMat; // 전략A 첫 만기 달
     const nextMat = m => m < m1 ? m1 : m1 + 36 * Math.ceil((m - m1 + 1) / 36); // m에 넣은 돈이 들어간 사이클의 만기 달
     const probe = runCore(P, g1, inflows, MAX_M, true);
+    // 60년을 굴려도 전략A 대기자금이 남으면(일반계좌 수익이 연 2,000만원 한도 유입보다 커서 끝나지 않음)
+    // 마지막 입금이 60년 끝까지 이어지므로, 이때는 ISA 한 계좌의 1억 한도가 다 차는 달(전략B 마지막 입금)에
+    // 넣은 ISA가 3년을 채우는 해까지를 기본 기간으로 본다. 그 뒤에도 못 옮긴 돈은 일반계좌에 남는다.
+    const stuck = probe.genLeftA > 0.5;
+    const lastA = stuck ? nextMat(Math.max(probe.lastDepositB, m1 - 1)) : probe.lastDepositA >= 0 ? nextMat(probe.lastDepositA) : m1;
     const minYears = Math.max(
-      probe.lastDepositA >= 0 ? Math.ceil(nextMat(probe.lastDepositA) / 12) : Math.ceil(m1 / 12),
+      Math.ceil(lastA / 12),
       Math.ceil((probe.lastDepositB + 1) / 12),
       Math.ceil(((inflows.length ? inflows[inflows.length - 1].m : 0) + 1) / 12));
     const H = Math.max(minYears, Math.round(P.horizon || 0), 3); // 비교가 의미 있도록 최소 3년
     const res = runCore(P, g1, inflows, 12 * H, false);
-    res.minYears = minYears; res.H = H;
+    res.minYears = minYears; res.H = H; res.stuck = stuck;
     return res;
   }
 
@@ -169,7 +174,7 @@
       B.isa *= g1; B.gen.v *= g1;
     }
 
-    if (probe) return { lastDepositA, lastDepositB, lumpDoneA };
+    if (probe) return { lastDepositA, lastDepositB, lumpDoneA, genLeftA: A.gen.v };
 
     // 최종 세후 (운용 종료 시점에 모두 찾는다고 가정)
     // 환급 재투자분: 연금저축에 세액공제 안 받은 납입으로 넣은 것으로 보고 원금 비과세·수익만 과세
@@ -179,8 +184,12 @@
     const genA = genAfterTax(A.gen, P.genTax);
     const refundPensionTax = P.excelRefund ? 0 : potGain * P.pensionRate;
     const refundOtherTax = P.excelRefund ? 0 : potGain * P.otherRate;
-    const aPension = A.penFree + penTaxable * (1 - P.pensionRate) + A.refundPot - refundPensionTax + A.refundCash + genA;
-    const aOther = A.penFree + penTaxable * (1 - P.otherRate) + A.refundPot - refundOtherTax + A.refundCash + genA;
+    // 운용 종료 때 3년이 안 된 전략A ISA: 대기자금을 끝내 다 못 옮겨 계속 넣는 경우에만 남는다(그 밖엔 마지막 만기 뒤라 0).
+    // 중도해지로 보고 이익에 15.4%
+    const aIsaEndTax = Math.max(A.isa - A.isaPrin, 0) * P.genTax;
+    const aIsaEnd = A.isa - aIsaEndTax;
+    const aPension = A.penFree + penTaxable * (1 - P.pensionRate) + A.refundPot - refundPensionTax + A.refundCash + genA + aIsaEnd;
+    const aOther = A.penFree + penTaxable * (1 - P.otherRate) + A.refundPot - refundOtherTax + A.refundCash + genA + aIsaEnd;
     const bIsaTax = Math.max(B.isa - B.isaPrin - P.freeLimit, 0) * P.isaTax;
     const bGenAfter = genAfterTax(B.gen, P.genTax);
     const bFinal = B.isa - bIsaTax + bGenAfter;
@@ -191,7 +200,7 @@
         aPen: A.pen, aPenFree: A.penFree, aPenTaxable: penTaxable,
         aPensionTax: penTaxable * P.pensionRate + refundPensionTax, aOtherTax: penTaxable * P.otherRate + refundOtherTax,
         aRefundValue: A.refundPot + A.refundCash, totalRefund: A.transfers.reduce((s, t) => s + t.refund, 0),
-        aIsaTax: A.transfers.reduce((s, t) => s + t.tax, 0), aGen: A.gen.v, aGenAfter: genA,
+        aIsaTax: A.transfers.reduce((s, t) => s + t.tax, 0), aIsaEnd: A.isa, aIsaEndTax, aGen: A.gen.v, aGenAfter: genA,
         aGenTax: (A.gen.tax || 0) + (A.gen.v - genA),   // 일반계좌 세금 = ISA로 옮길 때 낸 세금 + 끝에 남은 돈의 세금
         bIsa: B.isa, bIsaPrin: B.isaPrin, bIsaTax, bGen: B.gen.v, bGenAfter,
         bGenTax: (B.gen.tax || 0) + (B.gen.v - bGenAfter),

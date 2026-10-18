@@ -1041,7 +1041,10 @@
     $('horizon-hint').className = 'input-hint' + (userH && userH < res.minShown ? ' warn' : '');
     $('horizon-hint').textContent = userH && userH < res.minShown
       ? '최소 ' + res.minShown + '년(마지막 ISA가 3년을 채우는 해)이라 ' + res.minShown + '년으로 계산'
-      : (userH ? H + '년 뒤 전부 찾는다고 계산' : '자동: ' + H + '년 (마지막으로 넣은 ISA가 3년을 채우는 해, 최소 3년). 더 길게 입력 가능');
+      : (userH ? H + '년 뒤 전부 찾는다고 계산' : res.stuck && res.minYears >= res.minShown
+        ? '자동: ' + H + '년 (ISA 1억 한도가 다 찬 계좌가 3년을 채우는 해, 최소 3년). 더 길게 입력 가능'
+        : '자동: ' + H + '년 (마지막으로 넣은 ISA가 3년을 채우는 해, 최소 3년). 더 길게 입력 가능');
+    if (res.stuck) $('horizon-hint').textContent += ' · 기다리는 돈이 연 2,000만원 한도보다 빨리 불어나 전략A도 다 옮기지 못하고, 나머지는 일반계좌에 남습니다';
     const lastRow = res.years[res.years.length - 1];
     const endTxt = lastRow ? lastRow.label.replace(/년$/, '년 말') : '';
     $('start-hint').textContent = $('start-year').value + '년 ' + state.openMonth + '월 시작 → ' + endTxt + '에 전부 찾는 것으로 계산';
@@ -1128,11 +1131,12 @@
       ['<b style="color:var(--brown)">전략B</b> 해지할 때 ISA 세금 (9.9%)', -f.bIsaTax],
     ];
     if (f.aGenTax > 1) rows.splice(1, 0, ['전략A 한도 밖 일반계좌 세금 (15.4%)', -f.aGenTax]);
+    if (f.aIsaEndTax > 1) rows.splice(1, 0, ['전략A 3년 안 된 마지막 ISA 중도해지 세금 (15.4%)', -f.aIsaEndTax]);
     if (f.bGenTax > 1) rows.push(['전략B 한도 밖 일반계좌 세금 (15.4%)', -f.bGenTax]);
-    const netA = -f.aIsaTax - f.aGenTax + f.totalRefund - f.aPensionTax;
+    const netA = -f.aIsaTax - f.aIsaEndTax - f.aGenTax + f.totalRefund - f.aPensionTax;
     const netB = -f.bIsaTax - f.bGenTax;
     $('tax-table').innerHTML = rows.map(r => '<tr><td>' + r[0] + '</td><td class="' + (r[1] < 0 ? 'minus' : '') + '">'
-      + (r[1] === null ? r[2] : (r[1] < 0 ? '−' : '+') + fmtLong(Math.abs(r[1]))) + '</td></tr>').join('')
+      + (r[1] === null ? r[2] : Math.abs(r[1]) < 0.5 ? '0원' : (r[1] < 0 ? '−' : '+') + fmtLong(Math.abs(r[1]))) + '</td></tr>').join('')
       + '<tr class="total"><td>세금 − 환급 (A 연금수령 / B)</td><td>' + fmt(-netA) + ' / ' + fmt(-netB) + '</td></tr>';
   }
 
