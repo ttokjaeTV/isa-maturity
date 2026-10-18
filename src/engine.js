@@ -48,6 +48,7 @@
     const gross = net / (1 - f * tax);
     const s = Math.min(gross, g.v);
     const got = s * (1 - f * tax);
+    g.tax = (g.tax || 0) + (s - got);   // 옮기려고 팔 때 낸 세금 누계 (세금표에 쓰임)
     g.c -= s * (g.c / g.v); g.v -= s;
     if (g.v < 1) { g.v = 0; g.c = 0; }
     return got;
@@ -191,7 +192,9 @@
         aPensionTax: penTaxable * P.pensionRate + refundPensionTax, aOtherTax: penTaxable * P.otherRate + refundOtherTax,
         aRefundValue: A.refundPot + A.refundCash, totalRefund: A.transfers.reduce((s, t) => s + t.refund, 0),
         aIsaTax: A.transfers.reduce((s, t) => s + t.tax, 0), aGen: A.gen.v, aGenAfter: genA,
+        aGenTax: (A.gen.tax || 0) + (A.gen.v - genA),   // 일반계좌 세금 = ISA로 옮길 때 낸 세금 + 끝에 남은 돈의 세금
         bIsa: B.isa, bIsaPrin: B.isaPrin, bIsaTax, bGen: B.gen.v, bGenAfter,
+        bGenTax: (B.gen.tax || 0) + (B.gen.v - bGenAfter),
         paid: A.paid, inflowTotal,
       },
       lastDepositA, lastDepositB, lumpDoneA,
@@ -245,7 +248,7 @@
           const t = gen.v * (P.divYield / 12) * P.genTax; gen.v = gen.v * g1 - t; divTax += t;
         } else gen.v *= g1;
       }
-      const isaTax2 = isaTaxOf(isa, prin, F), genTax = Math.max(gen.v - gen.c, 0) * gt + divTax;
+      const isaTax2 = isaTaxOf(isa, prin, F), genTax = (gen.tax || 0) + Math.max(gen.v - gen.c, 0) * gt + divTax;   // 새 ISA로 옮길 때 낸 세금 포함
       out.term = { final: isa - isaTax2 + gen.v - Math.max(gen.v - gen.c, 0) * gt, isaTax: taxNow, isaTax2, genTax, refund: 0, penTax: 0,
         newIsa: isa, newIsaPrin: prin, gen: gen.v, value: isa + gen.v };
       out.keep = { final: keepCash, isaTax: taxLater, refund: 0, penTax: 0, value: keepV };

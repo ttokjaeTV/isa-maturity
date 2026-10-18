@@ -1127,9 +1127,10 @@
       ['└ 과세 대상 (공제받은 원금+수익)', null, fmt(f.aPenTaxable)],
       ['<b style="color:var(--brown)">전략B</b> 해지할 때 ISA 세금 (9.9%)', -f.bIsaTax],
     ];
-    if (f.bGen > 1) rows.push(['전략B 한도 밖 일반계좌 세금 (15.4%)', -(f.bGen - f.bGenAfter)]);
-    const netA = -f.aIsaTax + f.totalRefund - f.aPensionTax;
-    const netB = -f.bIsaTax - (f.bGen - f.bGenAfter);
+    if (f.aGenTax > 1) rows.splice(1, 0, ['전략A 한도 밖 일반계좌 세금 (15.4%)', -f.aGenTax]);
+    if (f.bGenTax > 1) rows.push(['전략B 한도 밖 일반계좌 세금 (15.4%)', -f.bGenTax]);
+    const netA = -f.aIsaTax - f.aGenTax + f.totalRefund - f.aPensionTax;
+    const netB = -f.bIsaTax - f.bGenTax;
     $('tax-table').innerHTML = rows.map(r => '<tr><td>' + r[0] + '</td><td class="' + (r[1] < 0 ? 'minus' : '') + '">'
       + (r[1] === null ? r[2] : (r[1] < 0 ? '−' : '+') + fmtLong(Math.abs(r[1]))) + '</td></tr>').join('')
       + '<tr class="total"><td>세금 − 환급 (A 연금수령 / B)</td><td>' + fmt(-netA) + ' / ' + fmt(-netB) + '</td></tr>';
