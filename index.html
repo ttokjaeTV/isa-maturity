@@ -461,23 +461,23 @@
       <div>
         <label class="label">ISA 유형 (비과세 한도)</label>
         <div class="chips" id="free-chips">
-          <button class="chip on" data-v="2000000">일반형<small>200만원</small></button>
-          <button class="chip" data-v="4000000">서민형·농어민형<small>400만원</small></button>
+          <button class="chip on">일반형<small>200만원</small></button>
+          <button class="chip">서민형·농어민형<small>400만원</small></button>
         </div>
       </div>
       <div>
         <label class="label">연금저축 세액공제율</label>
         <div class="chips" id="credit-chips">
-          <button class="chip" data-v="0.165">16.5%<small>총급여 5,500만원(종합소득금액 4,500만원) 이하</small></button>
-          <button class="chip on" data-v="0.132">13.2%<small>총급여 5,500만원(종합소득금액 4,500만원) 초과</small></button>
+          <button class="chip">16.5%<small>총급여 5,500만원(종합소득금액 4,500만원) 이하</small></button>
+          <button class="chip on">13.2%<small>총급여 5,500만원(종합소득금액 4,500만원) 초과</small></button>
         </div>
       </div>
       <div>
         <label class="label">연금 받을 나이 (연금소득세)</label>
         <div class="chips three" id="age-chips">
-          <button class="chip on" data-v="0.055">55~69세<small>5.5%</small></button>
-          <button class="chip" data-v="0.044">70~79세<small>4.4%</small></button>
-          <button class="chip" data-v="0.033">80세~<small>3.3%</small></button>
+          <button class="chip on">55~69세<small>5.5%</small></button>
+          <button class="chip">70~79세<small>4.4%</small></button>
+          <button class="chip">80세~<small>3.3%</small></button>
         </div>
       </div>
     </div>
@@ -635,8 +635,8 @@
       <div>
         <label class="label">ISA 유형 (비과세 한도)</label>
         <div class="chips" id="d-free-chips">
-          <button class="chip on" data-v="2000000">일반형<small>200만원</small></button>
-          <button class="chip" data-v="4000000">서민형·농어민형<small>400만원</small></button>
+          <button class="chip on">일반형<small>200만원</small></button>
+          <button class="chip">서민형·농어민형<small>400만원</small></button>
         </div>
       </div>
     </div>
@@ -662,16 +662,16 @@
         <div>
           <label class="label">연금저축 세액공제율</label>
           <div class="chips" id="d-credit-chips">
-            <button class="chip" data-v="0.165">16.5%<small>총급여 5,500만원(종합소득금액 4,500만원) 이하</small></button>
-            <button class="chip on" data-v="0.132">13.2%<small>총급여 5,500만원(종합소득금액 4,500만원) 초과</small></button>
+            <button class="chip">16.5%<small>총급여 5,500만원(종합소득금액 4,500만원) 이하</small></button>
+            <button class="chip on">13.2%<small>총급여 5,500만원(종합소득금액 4,500만원) 초과</small></button>
           </div>
         </div>
         <div>
           <label class="label">연금 받을 나이 (연금소득세)</label>
           <div class="chips three" id="d-age-chips">
-            <button class="chip on" data-v="0.055">55~69세<small>5.5%</small></button>
-            <button class="chip" data-v="0.044">70~79세<small>4.4%</small></button>
-            <button class="chip" data-v="0.033">80세~<small>3.3%</small></button>
+            <button class="chip on">55~69세<small>5.5%</small></button>
+            <button class="chip">70~79세<small>4.4%</small></button>
+            <button class="chip">80세~<small>3.3%</small></button>
           </div>
         </div>
       </div>
@@ -798,7 +798,14 @@
   </footer>
 </div>
 
+<script src="https://ttokjaetv.github.io/rules/v2026.1/rules.js"></script>
 <script>
+if (!window.TTOKJAE_RULES) {
+  var TJR_MSG = '기준값 파일(rules.js)을 불러오지 못했습니다. 인터넷 연결을 확인한 뒤 새로고침해 주세요.';
+  var tjrShow = function () { document.body.insertAdjacentHTML('afterbegin', '<div role="alert" style="background:#fdecea;color:#b3261e;padding:12px 16px;text-align:center;font-weight:600">' + TJR_MSG + '</div>'); };
+  document.body ? tjrShow() : document.addEventListener('DOMContentLoaded', tjrShow);
+  throw new Error(TJR_MSG);
+}
 /* ISA 만기 전략 계산 엔진 (브라우저·Node 공용)
  * 전략A: ISA 3년 만기마다 해지 → 세후금액을 연금저축으로 이전(전환금액 10%, 최대 300만원 추가 세액공제) → 즉시 새 ISA
  * 전략B: ISA 하나를 해지 없이 유지(총 납입 1억 한도), 운용 종료 시점에 해지
@@ -816,9 +823,12 @@
  * 시간 단위: 월. 수익률은 월 복리((1+r)^(1/12))로 환산해 연 단위 결과가 엑셀과 같게 맞춘다.
  */
 (function (root) {
-  const ISA_YEAR_LIMIT = 20000000;     // ISA 연간 납입한도 (달력 연도 기준, 미사용분 이월)
-  const ISA_TOTAL_LIMIT = 100000000;   // ISA 계좌당 총 납입한도
-  const TRANSFER_CREDIT_CAP = 3000000; // 연금 전환 추가 세액공제 대상 상한 (전환금액의 10%, 최대 300만원)
+  const TR = TTOKJAE_RULES;             // 공용 제도 상수 (rules.js, 전역)
+  const ISA_YEAR_LIMIT = TR.ISA.annualLimit;     // ISA 연간 납입한도 (달력 연도 기준, 미사용분 이월)
+  const ISA_TOTAL_LIMIT = TR.ISA.totalLimit;     // ISA 계좌당 총 납입한도
+  const TRANSFER_CREDIT_CAP = TR.PENSION_SAVINGS.isaTransferCreditCap; // 연금 전환 추가 세액공제 대상 상한 (전환금액의 10%, 최대 300만원)
+  const TRANSFER_CREDIT_RATE = TR.PENSION_SAVINGS.isaTransferCreditRate; // 연금 전환 추가 세액공제 대상 비율 (전환금액의 10%)
+  const CYCLE = TR.ISA.minHoldingYears * 12; // ISA 의무가입기간(3년) = 36개월, 전략A 사이클
   const MAX_M = 12 * 60;
 
   // 들어오는 돈: [{m, amt}]
@@ -859,8 +869,8 @@
   function simulate(p) {
     const P = Object.assign({
       mode: 'annual', annual: 10000000, total: 100000000, lump: 100000000, years: 10,
-      openMonth: 0, schedule: 'yearly', r: 0.08, freeLimit: 2000000, isaTax: 0.099,
-      creditRate: 0.132, pensionRate: 0.055, otherRate: 0.165, genTax: 0.154,
+      openMonth: 0, schedule: 'yearly', r: 0.08, freeLimit: TR.ISA.taxFreeGeneral, isaTax: TR.ISA.excessRate,
+      creditRate: TR.PENSION_SAVINGS.creditRateLow, pensionRate: TR.PENSION.rateByAge[0][1], otherRate: TR.PENSION.otherIncomeRate, genTax: TR.FIN_INCOME.withholdingWithLocal,
       reinvest: true, horizon: 0, excelRefund: false,
       startYear: 2027,
       existing: null,  // 지금 가진 ISA: { value: 평가액, principal: 넣은 원금, room: 지금 넣을 수 있는 한도 } // 시작(개설) 연도 — 표·차트를 달력 연도로 표시할 때 사용
@@ -872,10 +882,10 @@
     P.openMonth = Math.round(P.openMonth);
     const g1 = Math.pow(1 + P.r, 1 / 12);
     const inflows = buildInflows(P);
-    P.firstAge = Math.max(0, Math.min(35, Math.round(P.firstAge || 0)));
-    P.firstMat = P.firstMat > 0 ? Math.max(1, Math.min(MAX_M - 12, Math.round(P.firstMat))) : 36 - P.firstAge;
+    P.firstAge = Math.max(0, Math.min(CYCLE - 1, Math.round(P.firstAge || 0)));
+    P.firstMat = P.firstMat > 0 ? Math.max(1, Math.min(MAX_M - 12, Math.round(P.firstMat))) : CYCLE - P.firstAge;
     const m1 = P.firstMat; // 전략A 첫 만기 달
-    const nextMat = m => m < m1 ? m1 : m1 + 36 * Math.ceil((m - m1 + 1) / 36); // m에 넣은 돈이 들어간 사이클의 만기 달
+    const nextMat = m => m < m1 ? m1 : m1 + CYCLE * Math.ceil((m - m1 + 1) / CYCLE); // m에 넣은 돈이 들어간 사이클의 만기 달
     const probe = runCore(P, g1, inflows, MAX_M, true);
     // 60년을 굴려도 전략A 대기자금이 남으면(일반계좌 수익이 연 2,000만원 한도 유입보다 커서 끝나지 않음)
     // 마지막 입금이 60년 끝까지 이어지므로, 이때는 ISA 한 계좌의 1억 한도가 다 차는 달(전략B 마지막 입금)에
@@ -886,7 +896,7 @@
       Math.ceil(lastA / 12),
       Math.ceil((probe.lastDepositB + 1) / 12),
       Math.ceil(((inflows.length ? inflows[inflows.length - 1].m : 0) + 1) / 12));
-    const H = Math.max(minYears, Math.round(P.horizon || 0), 3); // 비교가 의미 있도록 최소 3년
+    const H = Math.max(minYears, Math.round(P.horizon || 0), TR.ISA.minHoldingYears); // 비교가 의미 있도록 최소 3년
     const res = runCore(P, g1, inflows, 12 * H, false);
     res.minYears = minYears; res.H = H; res.stuck = stuck;
     return res;
@@ -898,8 +908,8 @@
     const firstRoom = EX ? Math.max(0, Math.min(EX.room || 0, ISA_TOTAL_LIMIT - (EX.principal || 0)))
       : P.initialRoom > 0 ? Math.min(Math.max(P.initialRoom, ISA_YEAR_LIMIT), ISA_TOTAL_LIMIT) : ISA_YEAR_LIMIT;
     const m1 = P.firstMat;
-    const isMat = m => m > 0 && m >= m1 && (m - m1) % 36 === 0;
-    const A = { isa: 0, isaPrin: 0, room: firstRoom, openM: P.firstMat === 36 ? 0 : -1, pen: 0, penFree: 0,
+    const isMat = m => m > 0 && m >= m1 && (m - m1) % CYCLE === 0;
+    const A = { isa: 0, isaPrin: 0, room: firstRoom, openM: P.firstMat === CYCLE ? 0 : -1, pen: 0, penFree: 0,
       refundPot: 0, refundPotPrin: 0, refundCash: 0, gen: { v: 0, c: 0 }, paid: 0, transfers: [] };
     const B = { isa: 0, isaPrin: 0, room: firstRoom, gen: { v: 0, c: 0 }, paid: 0 };
     if (EX) { A.isa = B.isa = EX.value || 0; A.isaPrin = B.isaPrin = EX.principal || 0; A.openM = -1; } // 같은 기존 계좌에서 출발
@@ -912,13 +922,13 @@
     resetYr();
 
     for (let m = 0; m <= endM; m++) {
-      // (1) 전략A: 만기(36개월마다) 해지 → 연금저축 이전 → 새 ISA 개설
+      // (1) 전략A: 만기(CYCLE = 36개월마다) 해지 → 연금저축 이전 → 새 ISA 개설
       if (isMat(m)) {
         if (A.isa > 0.5) {
           const gain = A.isa - A.isaPrin;
           const tax = Math.max(gain - P.freeLimit, 0) * P.isaTax;
           const tr = A.isa - tax;
-          const base = Math.min(tr * 0.1, TRANSFER_CREDIT_CAP);
+          const base = Math.min(tr * TRANSFER_CREDIT_RATE, TRANSFER_CREDIT_CAP);
           const refund = base * P.creditRate;
           A.pen += tr; A.penFree += tr - base;
           if (P.reinvest) { A.refundPot += refund; A.refundPotPrin += refund; } else A.refundCash += refund;
@@ -1018,8 +1028,8 @@
    *      creditRate, pensionRate, calMonth(해지 가능 시점의 달 1~12) }
    * 두 경우 모두 N년 뒤 시점에 전부 찾는다(연금 이전이면 그때부터 연금으로 받는다)고 보고 세후 금액을 비교한다. */
   function deferral(p) {
-    const P = Object.assign({ value: 0, principal: 0, wait0: 0, years: 3, r: 0.08, freeLimit: 2000000, isaTax: 0.099, genTax: 0.154,
-      dest: 'pension', genType: 'overseas', divYield: 0.02, creditRate: 0.132, pensionRate: 0.055, calMonth: 1 }, p || {});
+    const P = Object.assign({ value: 0, principal: 0, wait0: 0, years: 3, r: 0.08, freeLimit: TR.ISA.taxFreeGeneral, isaTax: TR.ISA.excessRate, genTax: TR.FIN_INCOME.withholdingWithLocal,
+      dest: 'pension', genType: 'overseas', divYield: 0.02, creditRate: TR.PENSION_SAVINGS.creditRateLow, pensionRate: TR.PENSION.rateByAge[0][1], calMonth: 1 }, p || {});
     const g1 = Math.pow(1 + P.r, 1 / 12), M = Math.max(1, Math.round(P.years * 12));
     const gM = Math.pow(g1, M), F = P.freeLimit, T = P.isaTax;
     const isaTaxOf = (v, prin, f) => Math.max(v - prin - f, 0) * T;
@@ -1034,12 +1044,12 @@
     if (P.dest === 'pension') {
       const pr = P.pensionRate, cr = P.creditRate;
       // 지금 이전: 전환금액 10%(최대 300만원) 세액공제, 환급액은 연금저축에 다시 넣어 굴림(원금 비과세, 수익 과세)
-      const base = Math.min(c * 0.1, TRANSFER_CREDIT_CAP), refund = base * cr;
+      const base = Math.min(c * TRANSFER_CREDIT_RATE, TRANSFER_CREDIT_CAP), refund = base * cr;
       const penV = c * gM, refV = refund * gM;
       const penTax = (base + (penV - c)) * pr + (refV - refund) * pr;
       out.term = { final: penV + refV - penTax, isaTax: taxNow, isaTax2: 0, genTax: 0, refund, penTax, value: penV + refV };
       // 유지 후 N년 뒤 이전: 그때 받는 환급은 굴릴 시간이 없음
-      const base2 = Math.min(keepCash * 0.1, TRANSFER_CREDIT_CAP), refund2 = base2 * cr, penTax2 = base2 * pr;
+      const base2 = Math.min(keepCash * TRANSFER_CREDIT_RATE, TRANSFER_CREDIT_CAP), refund2 = base2 * cr, penTax2 = base2 * pr;
       out.keep = { final: keepCash + refund2 - penTax2, isaTax: taxLater, refund: refund2, penTax: penTax2, value: keepV };
     } else {
       // 지금 해지 → 바로 새 ISA (그 달 2,000만원, 매년 1월 2,000만원, 계좌당 1억원) + 나머지는 일반계좌에서 대기
@@ -1067,7 +1077,7 @@
     return out;
   }
 
-  const api = { simulate, deferral, ISA_YEAR_LIMIT, ISA_TOTAL_LIMIT, TRANSFER_CREDIT_CAP };
+  const api = { simulate, deferral, ISA_YEAR_LIMIT, ISA_TOTAL_LIMIT, TRANSFER_CREDIT_CAP, CYCLE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.IsaEngine = api;
 })(typeof window !== 'undefined' ? window : globalThis);
@@ -1076,7 +1086,21 @@
 <script>
 (function () {
   const $ = id => document.getElementById(id);
-  const state = { acct: 'new', mode: 'annual', openMonth: 12, freeLimit: 2000000, creditRate: 0.132, pensionRate: 0.055 };
+  // ---------- 제도 상수 (rules.js) ----------
+  const TR = TTOKJAE_RULES;
+  const YEAR_LIMIT = TR.ISA.annualLimit, TOTAL_LIMIT = TR.ISA.totalLimit, CYCLE = TR.ISA.minHoldingYears * 12;
+  const RATE_AGE = TR.PENSION.rateByAge;
+  const manTxt = v => String(v / 1e4).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '만원';   // 20000000 → '2,000만원'
+  const eokTxt = v => (v / 1e8) + '억원';                                                // 100000000 → '1억원'
+  const pctTxt = r => +(r * 100).toFixed(2) + '%';                                       // 0.099 → '9.9%'
+  const T_YEAR = manTxt(YEAR_LIMIT), T_TOTAL = eokTxt(TOTAL_LIMIT), T_ISA = pctTxt(TR.ISA.excessRate),
+    T_GEN = pctTxt(TR.FIN_INCOME.withholdingWithLocal), T_OTHER = pctTxt(TR.PENSION.otherIncomeRate);
+  // 선택 칩 값 (화면 글자는 그대로, 값만 rules에서)
+  [['free-chips', 'd-free-chips', [TR.ISA.taxFreeGeneral, TR.ISA.taxFreePreferential]],
+   ['credit-chips', 'd-credit-chips', [TR.PENSION_SAVINGS.creditRateHigh, TR.PENSION_SAVINGS.creditRateLow]],
+   ['age-chips', 'd-age-chips', RATE_AGE.map(r => r[1])]].forEach(([a, b, vals]) =>
+    [a, b].forEach(id => $(id).querySelectorAll('.chip').forEach((c, i) => { c.dataset.v = String(vals[i]); })));
+  const state = { acct: 'new', mode: 'annual', openMonth: 12, freeLimit: TR.ISA.taxFreeGeneral, creditRate: TR.PENSION_SAVINGS.creditRateLow, pensionRate: RATE_AGE[0][1] };
   let lineChart = null, barChart = null, lastMain = null, lastDefer = null;
 
   // ---------- 포맷 ----------
@@ -1128,10 +1152,10 @@
   }
   bindMoney('annual', 'annual-hint', v => {
     if (!v) return '';
-    if (state.mode === 'annual' && v > 20000000) return '<span style="color:#D9542B">ISA 연간 한도는 2,000만원 → 2,000만원으로 계산</span>';
-    return fmtLong(v) + ' (월 ' + fmtLong(v / 12) + ')' + (state.mode === 'both' && v > 20000000 ? ' · 한도 넘는 돈은 일반계좌에서 대기' : '');
+    if (state.mode === 'annual' && v > YEAR_LIMIT) return '<span style="color:#D9542B">ISA 연간 한도는 ' + T_YEAR + ' → ' + T_YEAR + '으로 계산</span>';
+    return fmtLong(v) + ' (월 ' + fmtLong(v / 12) + ')' + (state.mode === 'both' && v > YEAR_LIMIT ? ' · 한도 넘는 돈은 일반계좌에서 대기' : '');
   });
-  function totalHint(v) { return v ? fmtLong(v) + (num('annual') ? ' · ' + Math.ceil(v / Math.min(num('annual') || 1, 20000000)) + '년 납입' : '') : ''; }
+  function totalHint(v) { return v ? fmtLong(v) + (num('annual') ? ' · ' + Math.ceil(v / Math.min(num('annual') || 1, YEAR_LIMIT)) + '년 납입' : '') : ''; }
   bindMoney('total', 'total-hint', totalHint);
   $('annual').addEventListener('input', () => {
     $('total-hint').innerHTML = totalHint(num('total'));
@@ -1139,12 +1163,12 @@
   });
   bindMoney('lump', 'lump-hint', v => {
     if (!v) return '';
-    if (v <= 20000000) return fmtLong(v);
+    if (v <= YEAR_LIMIT) return fmtLong(v);
     if (state.acct === 'existing') {
       const room = existRoom();
-      return fmtLong(v) + (v > room ? '<span class="lump-warn">⚠ 남은 한도 ' + fmtLong(room) + '까지만 바로 들어가고, 나머지는 새 한도가 생길 때마다(매년 1월 2,000만원) 나눠 넣는 것으로 계산합니다.</span>' : '');
+      return fmtLong(v) + (v > room ? '<span class="lump-warn">⚠ 남은 한도 ' + fmtLong(room) + '까지만 바로 들어가고, 나머지는 새 한도가 생길 때마다(매년 1월 ' + T_YEAR + ') 나눠 넣는 것으로 계산합니다.</span>' : '');
     }
-    return fmtLong(v) + '<span class="lump-warn">⚠ 2,000만원 초과 — ISA 연간 한도(2,000만원)를 넘어 한 번에 다 못 넣습니다. 기본은 한도가 생길 때마다 나눠 넣는 것으로 계산합니다. 안 쓴 한도가 쌓인 기존 ISA가 있다면 위에서 <b>‘지금 가진 ISA로 계산’</b>을 고르세요.</span>';
+    return fmtLong(v) + '<span class="lump-warn">⚠ ' + T_YEAR + ' 초과 — ISA 연간 한도(' + T_YEAR + ')를 넘어 한 번에 다 못 넣습니다. 기본은 한도가 생길 때마다 나눠 넣는 것으로 계산합니다. 안 쓴 한도가 쌓인 기존 ISA가 있다면 위에서 <b>‘지금 가진 ISA로 계산’</b>을 고르세요.</span>';
   });
   bindMoney('years', 'years-hint', v => (v && num('annual')) ? '매년 저축 합계 ' + fmtLong(v * num('annual')) + ' · 목돈 포함 ' + fmtLong(v * num('annual') + num('lump')) : '');
   // ---------- 지금 가진 ISA ----------
@@ -1159,19 +1183,19 @@
   function existRoom() {
     // 가입한 해부터 올해까지 매년 2,000만원 한도(이월) − 넣은 원금, 계좌당 1억 상한
     const yrs = nowY - Number($('join-y').value) + 1;
-    return Math.max(0, Math.min(yrs * 20000000, 100000000) - num('ex-prin'));
+    return Math.max(0, Math.min(yrs * YEAR_LIMIT, TOTAL_LIMIT) - num('ex-prin'));
   }
   function firstMatMonths() {
     const e = joinElapsed();
-    return e < 36 ? 36 - e : Math.max(1, num('first-mat') || 1);
+    return e < CYCLE ? CYCLE - e : Math.max(1, num('first-mat') || 1);
   }
   function updateExisting() {
     const e = joinElapsed(), fm = $('first-mat'), mh = $('mat-hint');
     const joinFuture = Number($('join-y').value) === nowY && Number($('join-m').value) > nowM;
     $('join-hint').className = 'input-hint' + (joinFuture ? ' warn' : '');
-    $('join-hint').textContent = joinFuture ? '아직 오지 않은 달입니다' : '가입 ' + Math.floor(e / 12) + '년 ' + (e % 12) + '개월째' + (e >= 36 ? ' · 의무가입 3년 지남' : ' · 의무가입 3년까지 ' + (36 - e) + '개월');
-    if (e < 36) {
-      fm.disabled = true; fm.value = 36 - e;
+    $('join-hint').textContent = joinFuture ? '아직 오지 않은 달입니다' : '가입 ' + Math.floor(e / 12) + '년 ' + (e % 12) + '개월째' + (e >= CYCLE ? ' · 의무가입 3년 지남' : ' · 의무가입 3년까지 ' + (CYCLE - e) + '개월');
+    if (e < CYCLE) {
+      fm.disabled = true; fm.value = CYCLE - e;
       mh.className = 'input-hint'; mh.textContent = '가입 3년이 차는 때로 자동 · 이후 새 ISA는 3년마다';
     } else {
       if (fm.disabled) { fm.disabled = false; fm.value = 12; }
@@ -1179,10 +1203,10 @@
     }
     const v = num('ex-value'), pr = num('ex-prin'), room = existRoom();
     $('ex-value-hint').textContent = v ? fmtLong(v) + (pr ? ' · 수익 ' + fmtLong(v - pr) : '') : '';
-    $('ex-prin-hint').className = 'input-hint' + (pr > 100000000 ? ' warn' : '');
-    $('ex-prin-hint').textContent = pr > 100000000 ? '계좌당 총 납입한도는 1억원입니다' : (pr ? fmtLong(pr) : '');
+    $('ex-prin-hint').className = 'input-hint' + (pr > TOTAL_LIMIT ? ' warn' : '');
+    $('ex-prin-hint').textContent = pr > TOTAL_LIMIT ? '계좌당 총 납입한도는 ' + T_TOTAL + '입니다' : (pr ? fmtLong(pr) : '');
     const yrs = nowY - Number($('join-y').value) + 1;
-    $('exist-summary').innerHTML = '지금(' + nowY + '년 ' + nowM + '월)부터 계산합니다. 남은 납입 한도 <b>' + fmtLong(room) + '</b> (' + yrs + '개 연도 × 2,000만원 − 넣은 원금, 1억원 상한) · 첫 해지·연금 전환 <b>' + firstMatMonths() + '개월 뒤</b>, 이후 새 ISA는 3년마다'
+    $('exist-summary').innerHTML = '지금(' + nowY + '년 ' + nowM + '월)부터 계산합니다. 남은 납입 한도 <b>' + fmtLong(room) + '</b> (' + yrs + '개 연도 × ' + T_YEAR + ' − 넣은 원금, ' + T_TOTAL + ' 상한) · 첫 해지·연금 전환 <b>' + firstMatMonths() + '개월 뒤</b>, 이후 새 ISA는 3년마다'
       + '<br><small style="color:var(--ink-mute)">전략B는 이 계좌를 끝까지 유지하고, 전략A는 첫 해지 때 연금저축으로 옮긴 뒤 새 ISA를 엽니다.</small>';
   }
   $('first-mat').addEventListener('input', () => { $('first-mat').value = String($('first-mat').value).replace(/[^0-9]/g, ''); updateExisting(); run(); });
@@ -1256,7 +1280,7 @@
     $('open-month-note').innerHTML = existing
       ? '<span>기존 ISA에서는 다음 1월 새 한도가 <b>' + gap + '개월 뒤</b>에 생깁니다. 만기 후 새로 여는 ISA도 그 달 기준으로 이어집니다.</span>'
       : annualMode ? '<span><b>매년 ' + mo + '월</b>에 연간 납입금을 넣습니다. 만기도 ' + mo + '월이라 해지 후 새 ISA를 열어 그달 납입을 이어갑니다.' + (mo === 1 ? ' (매년 1월 한 번 넣는 엑셀 방식과 같음)' : '') + '</span>'
-      : '<span>개설할 때 2,000만원, <b>' + gap + '개월 뒤</b> 1월에 다음 2,000만원이 생깁니다. 3년 동안 <b>' + yrs + '개 연도 한도(최대 ' + (yrs * 2) + ',000만원)</b>를 씁니다.'
+      : '<span>개설할 때 ' + T_YEAR + ', <b>' + gap + '개월 뒤</b> 1월에 다음 ' + T_YEAR + '이 생깁니다. 3년 동안 <b>' + yrs + '개 연도 한도(최대 ' + manTxt(yrs * YEAR_LIMIT) + ')</b>를 씁니다.'
         + (mo === 12 ? ' 다음 한도가 가장 빨리 생기는 달입니다.' : mo === 1 ? ' (매년 1월 한 번 넣는 엑셀 방식과 같음)' : '') + '</span>';
   }
   $('open-month').addEventListener('change', () => { state.openMonth = Number($('open-month').value); run(); });
@@ -1268,9 +1292,9 @@
     const r = num('rate') / 100;
     return Object.assign({
       mode: state.mode,
-      annual: state.mode === 'annual' ? Math.min(num('annual'), 20000000) : num('annual'),
+      annual: state.mode === 'annual' ? Math.min(num('annual'), YEAR_LIMIT) : num('annual'),
       total: num('total'), lump: num('lump'), years: num('years'),
-      existing: state.acct === 'existing' ? { value: num('ex-value'), principal: Math.min(num('ex-prin'), 100000000), room: existRoom() } : null,
+      existing: state.acct === 'existing' ? { value: num('ex-value'), principal: Math.min(num('ex-prin'), TOTAL_LIMIT), room: existRoom() } : null,
       firstMat: state.acct === 'existing' ? firstMatMonths() : 0,
       openMonth: state.acct === 'existing' ? nowM : state.openMonth, r,
       startYear: state.acct === 'existing' ? nowY : (Number($('start-year').value) || nowY),
@@ -1295,7 +1319,7 @@
       const other = state.openMonth === 1 ? 12 : 1; // 비교 상대: 1월 개설(선택이 1월이면 12월)
       const p1 = IsaEngine.simulate(Object.assign({}, base, { horizon: 0 }));
       const p2 = IsaEngine.simulate(Object.assign({}, base, { openMonth: other, horizon: 0 }));
-      const minH = Math.max(p1.minYears, p2.minYears, 3);
+      const minH = Math.max(p1.minYears, p2.minYears, TR.ISA.minHoldingYears);
       const H = Math.max(minH, base.horizon || 0);
       res = IsaEngine.simulate(Object.assign({}, base, { horizon: H }));
       alt = IsaEngine.simulate(Object.assign({}, base, { openMonth: other, horizon: H }));
@@ -1303,7 +1327,7 @@
       res.minShown = minH;
     } else {
       res = IsaEngine.simulate(base);
-      res.minShown = Math.max(res.minYears, 3);
+      res.minShown = Math.max(res.minYears, TR.ISA.minHoldingYears);
     }
     const H = res.H, f = res.final;
     monthNote();
@@ -1316,7 +1340,7 @@
       : (userH ? H + '년 뒤 전부 찾는다고 계산' : res.stuck && res.minYears >= res.minShown
         ? '자동: ' + H + '년 (ISA 1억 한도가 다 찬 계좌가 3년을 채우는 해, 최소 3년). 더 길게 입력 가능'
         : '자동: ' + H + '년 (마지막으로 넣은 ISA가 3년을 채우는 해, 최소 3년). 더 길게 입력 가능');
-    if (res.stuck) $('horizon-hint').textContent += ' · 기다리는 돈이 연 2,000만원 한도보다 빨리 불어나 전략A도 다 옮기지 못하고, 나머지는 일반계좌에 남습니다';
+    if (res.stuck) $('horizon-hint').textContent += ' · 기다리는 돈이 연 ' + T_YEAR + ' 한도보다 빨리 불어나 전략A도 다 옮기지 못하고, 나머지는 일반계좌에 남습니다';
     const lastRow = res.years[res.years.length - 1];
     const endTxt = lastRow ? lastRow.label.replace(/년$/, '년 말') : '';
     $('start-hint').textContent = $('start-year').value + '년 ' + state.openMonth + '월 시작 → ' + endTxt + '에 전부 찾는 것으로 계산';
@@ -1337,9 +1361,9 @@
     $('s-ap').textContent = fmt(f.aPension);
     $('s-ap-sub').textContent = '연금소득세 ' + (state.pensionRate * 100).toFixed(1) + '% · ' + fmtWon(f.aPension);
     $('s-ao').textContent = fmt(f.aOther);
-    $('s-ao-sub').textContent = '기타소득세 16.5% · ' + fmtWon(f.aOther);
+    $('s-ao-sub').textContent = '기타소득세 ' + T_OTHER + ' · ' + fmtWon(f.aOther);
     $('s-b').textContent = fmt(f.b);
-    $('s-b-sub').textContent = 'ISA 해지 시 9.9% 분리과세' + (f.bGen > 1 ? ' · 일반계좌 ' + fmt(f.bGenAfter) + ' 포함' : '') + ' · ' + fmtWon(f.b);
+    $('s-b-sub').textContent = 'ISA 해지 시 ' + T_ISA + ' 분리과세' + (f.bGen > 1 ? ' · 일반계좌 ' + fmt(f.bGenAfter) + ' 포함' : '') + ' · ' + fmtWon(f.b);
     $('s-paid-label').textContent = base.existing ? '기존 원금 + 추가로 넣은 돈' : (state.mode === 'annual' ? '총 납입액' : '전략A가 ISA에 넣은 돈');
     $('s-paid').textContent = fmt(f.paid + (base.existing ? base.existing.principal : 0));
     $('s-paid-sub').textContent = (state.mode === 'annual' ? '' : '넣은 돈 ' + fmt(f.inflowTotal) + ' + 기다리는 동안 불어난 돈(세후) · ') + 'ISA 이전 ' + res.transfers.length + '회 · 세액공제 환급 ' + fmt(f.totalRefund);
@@ -1351,8 +1375,8 @@
       $('fast-box').style.display = '';
       $('fast-title').textContent = mo + '월 개설 vs ' + om + '월 개설 (같은 ' + H + '년 기준)';
       const gainA = fast.final.aPension - slow.final.aPension, gainB = fast.final.b - slow.final.b;
-      $('fast-desc').innerHTML = '같은 돈을 ISA에 얼마나 빨리 옮기느냐의 차이입니다. 빨리 옮길수록 일반계좌에서 15.4% 과세되는 기간이 줄어듭니다. '
-        + (f.inflowTotal > 1e8 ? '넣는 돈이 1억원을 넘으면 ISA를 갈아타는 전략A만 한도가 계속 새로 생겨 차이가 커집니다.' : '');
+      $('fast-desc').innerHTML = '같은 돈을 ISA에 얼마나 빨리 옮기느냐의 차이입니다. 빨리 옮길수록 일반계좌에서 ' + T_GEN + ' 과세되는 기간이 줄어듭니다. '
+        + (f.inflowTotal > TOTAL_LIMIT ? '넣는 돈이 ' + T_TOTAL + '을 넘으면 ISA를 갈아타는 전략A만 한도가 계속 새로 생겨 차이가 커집니다.' : '');
       const done = x => x.lumpDoneA >= 0 ? monthLabel(x.lumpDoneA).replace('년차 초', '년') : '운용 끝까지 못 다 넣음';
       $('f-when').textContent = done(fast) + ' vs ' + done(slow);
       $('f-when-s').textContent = '전략A 기준, 목돈을 ISA에 다 옮긴 시점 (' + mo + '월 vs ' + om + '월 개설)';
@@ -1390,7 +1414,7 @@
     $('tbody').innerHTML = rows;
     const p = params();
     $('table-note').innerHTML = '평가액은 세금 떼기 전 금액입니다. A 평가액 = ISA 잔액 + 연금저축 잔액 + 환급액' + (p.mode !== 'annual' ? ' + 아직 ISA에 못 넣은 일반계좌 대기자금' : '')
-      + '. ★ 해에 ISA를 해지해 세금(비과세 한도 초과분 9.9%)을 내고 남은 돈을 연금저축으로 옮긴 뒤 바로 새 ISA를 시작합니다.';
+      + '. ★ 해에 ISA를 해지해 세금(비과세 한도 초과분 ' + T_ISA + ')을 내고 남은 돈을 연금저축으로 옮긴 뒤 바로 새 ISA를 시작합니다.';
   }
 
   function renderTax(res) {
@@ -1400,11 +1424,11 @@
       ['연금 전환 세액공제 환급', f.totalRefund],
       ['연금으로 받을 때 연금소득세 (' + (state.pensionRate * 100).toFixed(1) + '%)', -f.aPensionTax],
       ['└ 과세 대상 (공제받은 원금+수익)', null, fmt(f.aPenTaxable)],
-      ['<b style="color:var(--brown)">전략B</b> 해지할 때 ISA 세금 (9.9%)', -f.bIsaTax],
+      ['<b style="color:var(--brown)">전략B</b> 해지할 때 ISA 세금 (' + T_ISA + ')', -f.bIsaTax],
     ];
-    if (f.aGenTax > 1) rows.splice(1, 0, ['전략A 한도 밖 일반계좌 세금 (15.4%)', -f.aGenTax]);
-    if (f.aIsaEndTax > 1) rows.splice(1, 0, ['전략A 3년 안 된 마지막 ISA 중도해지 세금 (15.4%)', -f.aIsaEndTax]);
-    if (f.bGenTax > 1) rows.push(['전략B 한도 밖 일반계좌 세금 (15.4%)', -f.bGenTax]);
+    if (f.aGenTax > 1) rows.splice(1, 0, ['전략A 한도 밖 일반계좌 세금 (' + T_GEN + ')', -f.aGenTax]);
+    if (f.aIsaEndTax > 1) rows.splice(1, 0, ['전략A 3년 안 된 마지막 ISA 중도해지 세금 (' + T_GEN + ')', -f.aIsaEndTax]);
+    if (f.bGenTax > 1) rows.push(['전략B 한도 밖 일반계좌 세금 (' + T_GEN + ')', -f.bGenTax]);
     const netA = -f.aIsaTax - f.aIsaEndTax - f.aGenTax + f.totalRefund - f.aPensionTax;
     const netB = -f.bIsaTax - f.bGenTax;
     $('tax-table').innerHTML = rows.map(r => '<tr><td>' + r[0] + '</td><td class="' + (r[1] < 0 ? 'minus' : '') + '">'
@@ -1506,13 +1530,13 @@
         ? '3년마다 갈아타면 비과세 한도가 ' + n + '번 새로 생깁니다. 이 조건에선 목돈으로 찾아도 A가 앞섭니다.'
         : '연금으로 받을 계획이면 갈아타기(A), 목돈이 필요하면 유지(B)입니다.';
       desc = '전략A는 ISA를 ' + n + '번 해지하면서 사이클마다 <strong>비과세 ' + fmt(state.freeLimit) + '원</strong>을 새로 쓰고, 옮길 때마다 <strong>세액공제 환급(총 ' + fmt(f.totalRefund) + '원)</strong>을 받습니다. '
-        + '대신 연금저축으로 옮긴 돈은 나중에 찾을 때 과세됩니다. 연금으로 나눠 받으면 ' + rate + '%라서 ISA의 9.9%보다 가볍지만, '
-        + '55세 전에 깨거나 한 번에 찾으면 <strong>16.5%</strong>가 붙습니다. '
-        + (d2 > 0 ? '이 조건에서는 16.5%를 내도 A가 앞서지만, 차이는 ' + fmtLong(d2) + '로 줄어듭니다.' : '그래서 한 번에 찾으면 B가 ' + fmtLong(-d2) + ' 앞섭니다.')
+        + '대신 연금저축으로 옮긴 돈은 나중에 찾을 때 과세됩니다. 연금으로 나눠 받으면 ' + rate + '%라서 ISA의 ' + T_ISA + '보다 가볍지만, '
+        + TR.PENSION.minAge + '세 전에 깨거나 한 번에 찾으면 <strong>' + T_OTHER + '</strong>가 붙습니다. '
+        + (d2 > 0 ? '이 조건에서는 ' + T_OTHER + '를 내도 A가 앞서지만, 차이는 ' + fmtLong(d2) + '로 줄어듭니다.' : '그래서 한 번에 찾으면 B가 ' + fmtLong(-d2) + ' 앞섭니다.')
         + ' 결국 <strong>이 돈을 노후 연금으로 쓸 것인가</strong>가 판단 기준입니다.';
     } else {
       title = '이 조건에서는 ISA를 그대로 두는 쪽(B)이 앞섭니다.';
-      desc = 'ISA를 해지해 옮길 때마다 비과세 한도 초과분에 9.9%를 내고, 연금저축의 과세 대상도 커집니다. 수익률이 낮거나 기간이 짧으면 갈아타서 얻는 비과세·환급 효과보다 세금 부담이 더 클 수 있습니다. '
+      desc = 'ISA를 해지해 옮길 때마다 비과세 한도 초과분에 ' + T_ISA + '를 내고, 연금저축의 과세 대상도 커집니다. 수익률이 낮거나 기간이 짧으면 갈아타서 얻는 비과세·환급 효과보다 세금 부담이 더 클 수 있습니다. '
         + '수익률·기간·세액공제율을 바꿔 보며 어느 지점에서 결과가 뒤집히는지 확인해 보세요.';
     }
     $('insight-title').textContent = title;
@@ -1521,7 +1545,7 @@
 
 
   // ================= 탭 2: 해지 타이밍 비교 =================
-  const dstate = { freeLimit: 2000000, dest: 'pension', creditRate: 0.132, pensionRate: 0.055, genType: 'overseas' };
+  const dstate = { freeLimit: TR.ISA.taxFreeGeneral, dest: 'pension', creditRate: TR.PENSION_SAVINGS.creditRateLow, pensionRate: RATE_AGE[0][1], genType: 'overseas' };
   let dChart = null, dTouched = false;
   (function () {
     for (let y = nowY; y >= nowY - 15; y--) $('d-join-y').insertAdjacentHTML('beforeend', '<option value="' + y + '">' + y + '년</option>');
@@ -1571,9 +1595,9 @@
 
   function dParams(years) {
     const e = Math.max(0, (nowY - Number($('d-join-y').value)) * 12 + (nowM - Number($('d-join-m').value)));
-    const wait0 = e < 36 ? 36 - e : 0;
+    const wait0 = e < CYCLE ? CYCLE - e : 0;
     return {
-      value: num('d-value'), principal: Math.min(num('d-prin'), 100000000), wait0, years, r: num('d-rate') / 100,
+      value: num('d-value'), principal: Math.min(num('d-prin'), TOTAL_LIMIT), wait0, years, r: num('d-rate') / 100,
       freeLimit: dstate.freeLimit, dest: dstate.dest, genType: dstate.genType, divYield: num('d-div') / 100,
       creditRate: dstate.creditRate, pensionRate: dstate.pensionRate, calMonth: (nowM - 1 + wait0) % 12 + 1, _e: e,
     };
@@ -1602,7 +1626,7 @@
     document.querySelector('.be-scale').style.display = showTrack ? '' : 'none';
     if (be.always === 'keep') {
       $('d-be-title').innerHTML = '이 조건에선 수익률과 상관없이 <b>더 두는 쪽</b>이 유리합니다';
-      $('d-be-desc').innerHTML = '수익이 거의 없어도 유지가 앞섭니다. ' + (isa ? '지금 해지하면 새 ISA에 1년에 2,000만원씩만 들어가, 나머지가 일반계좌에서 세금을 내기 때문입니다.' : '') + '<br><small style="color:var(--ink-mute)">' + cond + '</small>';
+      $('d-be-desc').innerHTML = '수익이 거의 없어도 유지가 앞섭니다. ' + (isa ? '지금 해지하면 새 ISA에 1년에 ' + T_YEAR + '씩만 들어가, 나머지가 일반계좌에서 세금을 내기 때문입니다.' : '') + '<br><small style="color:var(--ink-mute)">' + cond + '</small>';
       return;
     }
     if (be.always === 'term') {
@@ -1625,7 +1649,7 @@
     const gap = cur - g, side = gap >= 0 ? '<b>더 두는 쪽</b>' : '<b>지금 해지하는 쪽</b>';
     $('d-be-desc').innerHTML = '원금 ' + fmtLong(p.principal) + ' 기준으로 평가액 <b>약 ' + fmtLong(p.principal * (1 + g)) + '</b>이 갈림길입니다. '
       + '이 계좌는 지금 ' + pct(cur) + '로 기준보다 ' + Math.abs(Math.round(gap * 100)).toLocaleString() + '%p ' + (gap >= 0 ? '높아' : '낮아') + ' ' + side + '에 있습니다. '
-      + (isa ? '' : '쌓인 수익이 클수록 미룰 세금이 커지고(유지 유리), 계좌가 클수록 앞으로 수익에 붙는 세율 차이(9.9% vs 연금소득세)가 커집니다(이전 유리). ')
+      + (isa ? '' : '쌓인 수익이 클수록 미룰 세금이 커지고(유지 유리), 계좌가 클수록 앞으로 수익에 붙는 세율 차이(' + T_ISA + ' vs 연금소득세)가 커집니다(이전 유리). ')
       + '<br><small style="color:var(--ink-mute)">' + cond + ' · 수익률·기간·연금 받을 나이를 바꾸면 기준점도 바뀝니다.</small>';
   }
   function runDefer() {
@@ -1633,17 +1657,17 @@
     $('d-pen-box').style.display = isa ? 'none' : '';
     $('d-gen-box').style.display = isa ? '' : 'none';
     $('d-div-field').style.display = (isa && dstate.genType === 'domestic') ? '' : 'none';
-    const nMin = isa ? 3 : 1;
+    const nMin = isa ? TR.ISA.minHoldingYears : 1;
     const nIn = num('d-years'), N = Math.min(30, Math.max(nMin, Math.round(nIn) || nMin));
     const p = dParams(N), e = p._e;
     const v = p.value, pr = num('d-prin');
     // 입력 힌트
     const joinFuture = Number($('d-join-y').value) === nowY && Number($('d-join-m').value) > nowM;
     $('d-join-hint').className = 'input-hint' + (joinFuture ? ' warn' : '');
-    $('d-join-hint').textContent = joinFuture ? '아직 오지 않은 달입니다' : '가입 ' + Math.floor(e / 12) + '년 ' + (e % 12) + '개월째' + (e >= 36 ? ' · 의무가입 3년 지남' : ' · 3년까지 ' + (36 - e) + '개월');
+    $('d-join-hint').textContent = joinFuture ? '아직 오지 않은 달입니다' : '가입 ' + Math.floor(e / 12) + '년 ' + (e % 12) + '개월째' + (e >= CYCLE ? ' · 의무가입 3년 지남' : ' · 3년까지 ' + (CYCLE - e) + '개월');
     $('d-value-hint').textContent = v ? fmtLong(v) : '';
-    $('d-prin-hint').className = 'input-hint' + (pr > 100000000 ? ' warn' : '');
-    $('d-prin-hint').textContent = pr > 100000000 ? '계좌당 총 납입한도는 1억원 → 1억원으로 계산' : (pr ? fmtLong(pr) : '');
+    $('d-prin-hint').className = 'input-hint' + (pr > TOTAL_LIMIT ? ' warn' : '');
+    $('d-prin-hint').textContent = pr > TOTAL_LIMIT ? '계좌당 총 납입한도는 ' + T_TOTAL + ' → ' + T_TOTAL + '으로 계산' : (pr ? fmtLong(pr) : '');
     $('d-years-hint').className = 'input-hint' + (nIn && nIn < nMin ? ' warn' : '');
     $('d-years-hint').textContent = (nIn && nIn < nMin ? '새 ISA는 3년을 채워야 해서 최소 3년으로 계산 · ' : '') + N + '년 뒤 = ' + calAfter(p.wait0 + 12 * N) + '에 해지';
     if (!v || p.r < 0 || p.r > 0.5) return;
@@ -1656,7 +1680,7 @@
         : '')
       + '수익 <b>' + fmtLong(gain0) + '</b>' + (p.principal > 0 ? ' (원금 대비 ' + ret.toLocaleString() + '%)' : '')
       + ' · ' + when + ' 해지하면 ISA 세금 <b>' + fmtLong(o.taxNow) + '</b>'
-      + (o.taxNow > 0 ? ' <small style="color:var(--ink-mute)">(비과세 ' + fmt(p.freeLimit) + '원 넘는 ' + fmtLong(gain0 - p.freeLimit) + ' × 9.9%)</small>' : '');
+      + (o.taxNow > 0 ? ' <small style="color:var(--ink-mute)">(비과세 ' + fmt(p.freeLimit) + '원 넘는 ' + fmtLong(gain0 - p.freeLimit) + ' × ' + T_ISA + ')</small>' : '');
 
     const destName = isa ? '새 ISA + 일반계좌' : '연금저축';
     const nowLabel = (p.wait0 > 0 ? '3년 채우고' : '지금') + ' 해지 → ' + destName;
@@ -1674,7 +1698,7 @@
     $('d-s2-label').textContent = keepLabel; $('d-s2').textContent = fmt(k.final);
     $('d-s2-sub').textContent = endWhen + ' 세후' + (isa ? '' : ' (연금으로 받을 때)');
     $('d-s3').textContent = (o.deferValue >= 0 ? '+' : '') + fmt(o.deferValue);
-    $('d-s3-sub').textContent = when + ' 낼 세금 ' + fmt(o.taxNow) + '원을 ' + N + '년 더 굴린 몫 (세율은 9.9%로 같음)';
+    $('d-s3-sub').textContent = when + ' 낼 세금 ' + fmt(o.taxNow) + '원을 ' + N + '년 더 굴린 몫 (세율은 ' + T_ISA + '로 같음)';
     $('d-s4-label').textContent = when + ' 해지 시 ISA 세금';
     $('d-s4').textContent = fmt(o.taxNow);
     $('d-s4-sub').textContent = N + '년 더 두면 ' + fmt(o.taxLater) + ' (계좌가 커진 만큼 늘어남)';
@@ -1730,16 +1754,16 @@
     if (Math.abs(d) < 100000) title = '이 조건에선 언제 해지하든 결과가 비슷합니다.';
     else if (d > 0) title = N + '년 더 두면 ' + fmtLong(d) + ' 더 남습니다. 미룬 세금이 계좌 안에서 더 굴러간 덕분입니다.';
     else title = (p.wait0 > 0 ? '3년 채우고' : '지금') + ' 해지해 ' + (isa ? '새 ISA로 갈아타는' : '연금저축으로 옮기는') + ' 쪽이 ' + fmtLong(-d) + ' 더 남습니다.';
-    desc = 'ISA 세금은 비과세 한도를 넘는 수익에 <strong>9.9% 정률</strong>이라, 해지를 미뤄도 세율이 낮아지지는 않습니다. 미루는 효과는 ' + when + ' 낼 세금 <strong>' + fmtLong(o.taxNow) + '</strong>을 ' + N + '년 더 계좌 안에서 굴리는 몫, 이 조건에서 <strong>' + fmtLong(o.deferValue) + '</strong>입니다. 수익이 클수록 지금 낼 세금이 커져 이 몫도 커집니다. ';
-    if (isa) desc += '반대로 ' + when + ' 해지하면 새 ISA에는 1년에 2,000만원씩만 들어가서, 나머지 돈이 일반계좌에서 기다리는 동안 세금 <strong>' + fmtLong(t.genTax) + '</strong>이 붙습니다'
+    desc = 'ISA 세금은 비과세 한도를 넘는 수익에 <strong>' + T_ISA + ' 정률</strong>이라, 해지를 미뤄도 세율이 낮아지지는 않습니다. 미루는 효과는 ' + when + ' 낼 세금 <strong>' + fmtLong(o.taxNow) + '</strong>을 ' + N + '년 더 계좌 안에서 굴리는 몫, 이 조건에서 <strong>' + fmtLong(o.deferValue) + '</strong>입니다. 수익이 클수록 지금 낼 세금이 커져 이 몫도 커집니다. ';
+    if (isa) desc += '반대로 ' + when + ' 해지하면 새 ISA에는 1년에 ' + T_YEAR + '씩만 들어가서, 나머지 돈이 일반계좌에서 기다리는 동안 세금 <strong>' + fmtLong(t.genTax) + '</strong>이 붙습니다'
       + (dstate.genType === 'overseas' ? '(국내주식형으로 굴리면 매매차익이 비과세라 이 부담이 크게 줄어듭니다)' : '') + '. 비과세 한도를 한 번 더 쓰는 이득은 ' + fmtLong(o.allowValue) + '입니다.';
-    else desc += '반대로 ' + when + ' 연금저축으로 옮기면 앞으로 ' + N + '년 동안 생기는 수익에 9.9% 대신 연금 받을 때 연금소득세 <strong>' + (dstate.pensionRate * 100).toFixed(1) + '%</strong>가 붙습니다. 두 효과를 합친 결과가 위 차이입니다. 단, 연금저축으로 옮긴 돈은 55세 전에 찾거나 연금 외로 한 번에 찾으면 16.5%가 붙습니다.';
+    else desc += '반대로 ' + when + ' 연금저축으로 옮기면 앞으로 ' + N + '년 동안 생기는 수익에 ' + T_ISA + ' 대신 연금 받을 때 연금소득세 <strong>' + (dstate.pensionRate * 100).toFixed(1) + '%</strong>가 붙습니다. 두 효과를 합친 결과가 위 차이입니다. 단, 연금저축으로 옮긴 돈은 ' + TR.PENSION.minAge + '세 전에 찾거나 연금 외로 한 번에 찾으면 ' + T_OTHER + '가 붙습니다.';
     $('d-insight-title').textContent = title;
     $('d-insight-desc').innerHTML = desc;
   }
   // ================= 결과 복사 =================
-  const ageName = r => r === 0.044 ? '70~79세' : r === 0.033 ? '80세~' : '55~69세';
-  const freeName = v => v === 4000000 ? '서민형·농어민형(비과세 400만원)' : '일반형(비과세 200만원)';
+  const ageName = r => r === RATE_AGE[1][1] ? RATE_AGE[0][0] + '~' + (RATE_AGE[1][0] - 1) + '세' : r === RATE_AGE[2][1] ? RATE_AGE[1][0] + '세~' : TR.PENSION.minAge + '~' + (RATE_AGE[0][0] - 1) + '세';
+  const freeName = v => v === TR.ISA.taxFreePreferential ? '서민형·농어민형(비과세 ' + manTxt(TR.ISA.taxFreePreferential) + ')' : '일반형(비과세 ' + manTxt(TR.ISA.taxFreeGeneral) + ')';
   const pageUrl = hash => location.href.split(/[?#]/)[0] + (hash || '');
   function copyText(text, btn) {
     const label = '결과 복사';

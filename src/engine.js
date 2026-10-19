@@ -15,9 +15,12 @@
  * 시간 단위: 월. 수익률은 월 복리((1+r)^(1/12))로 환산해 연 단위 결과가 엑셀과 같게 맞춘다.
  */
 (function (root) {
-  const ISA_YEAR_LIMIT = 20000000;     // ISA 연간 납입한도 (달력 연도 기준, 미사용분 이월)
-  const ISA_TOTAL_LIMIT = 100000000;   // ISA 계좌당 총 납입한도
-  const TRANSFER_CREDIT_CAP = 3000000; // 연금 전환 추가 세액공제 대상 상한 (전환금액의 10%, 최대 300만원)
+  const TR = TTOKJAE_RULES;             // 공용 제도 상수 (rules.js, 전역)
+  const ISA_YEAR_LIMIT = TR.ISA.annualLimit;     // ISA 연간 납입한도 (달력 연도 기준, 미사용분 이월)
+  const ISA_TOTAL_LIMIT = TR.ISA.totalLimit;     // ISA 계좌당 총 납입한도
+  const TRANSFER_CREDIT_CAP = TR.PENSION_SAVINGS.isaTransferCreditCap; // 연금 전환 추가 세액공제 대상 상한 (전환금액의 10%, 최대 300만원)
+  const TRANSFER_CREDIT_RATE = TR.PENSION_SAVINGS.isaTransferCreditRate; // 연금 전환 추가 세액공제 대상 비율 (전환금액의 10%)
+  const CYCLE = TR.ISA.minHoldingYears * 12; // ISA 의무가입기간(3년) = 36개월, 전략A 사이클
   const MAX_M = 12 * 60;
 
   // 들어오는 돈: [{m, amt}]
@@ -58,8 +61,8 @@
   function simulate(p) {
     const P = Object.assign({
       mode: 'annual', annual: 10000000, total: 100000000, lump: 100000000, years: 10,
-      openMonth: 0, schedule: 'yearly', r: 0.08, freeLimit: 2000000, isaTax: 0.099,
-      creditRate: 0.132, pensionRate: 0.055, otherRate: 0.165, genTax: 0.154,
+      openMonth: 0, schedule: 'yearly', r: 0.08, freeLimit: TR.ISA.taxFreeGeneral, isaTax: TR.ISA.excessRate,
+      creditRate: TR.PENSION_SAVINGS.creditRateLow, pensionRate: TR.PENSION.rateByAge[0][1], otherRate: TR.PENSION.otherIncomeRate, genTax: TR.FIN_INCOME.withholdingWithLocal,
       reinvest: true, horizon: 0, excelRefund: false,
       startYear: 2027,
       existing: null,  // 지금 가진 ISA: { value: 평가액, principal: 넣은 원금, room: 지금 넣을 수 있는 한도 } // 시작(개설) 연도 — 표·차트를 달력 연도로 표시할 때 사용
@@ -71,10 +74,10 @@
     P.openMonth = Math.round(P.openMonth);
     const g1 = Math.pow(1 + P.r, 1 / 12);
     const inflows = buildInflows(P);
-    P.firstAge = Math.max(0, Math.min(35, Math.round(P.firstAge || 0)));
-    P.firstMat = P.firstMat > 0 ? Math.max(1, Math.min(MAX_M - 12, Math.round(P.firstMat))) : 36 - P.firstAge;
+    P.firstAge = Math.max(0, Math.min(CYCLE - 1, Math.round(P.firstAge || 0)));
+    P.firstMat = P.firstMat > 0 ? Math.max(1, Math.min(MAX_M - 12, Math.round(P.firstMat))) : CYCLE - P.firstAge;
     const m1 = P.firstMat; // 전략A 첫 만기 달
-    const nextMat = m => m < m1 ? m1 : m1 + 36 * Math.ceil((m - m1 + 1) / 36); // m에 넣은 돈이 들어간 사이클의 만기 달
+    const nextMat = m => m < m1 ? m1 : m1 + CYCLE * Math.ceil((m - m1 + 1) / CYCLE); // m에 넣은 돈이 들어간 사이클의 만기 달
     const probe = runCore(P, g1, inflows, MAX_M, true);
     // 60년을 굴려도 전략A 대기자금이 남으면(일반계좌 수익이 연 2,000만원 한도 유입보다 커서 끝나지 않음)
     // 마지막 입금이 60년 끝까지 이어지므로, 이때는 ISA 한 계좌의 1억 한도가 다 차는 달(전략B 마지막 입금)에
@@ -85,7 +88,7 @@
       Math.ceil(lastA / 12),
       Math.ceil((probe.lastDepositB + 1) / 12),
       Math.ceil(((inflows.length ? inflows[inflows.length - 1].m : 0) + 1) / 12));
-    const H = Math.max(minYears, Math.round(P.horizon || 0), 3); // 비교가 의미 있도록 최소 3년
+    const H = Math.max(minYears, Math.round(P.horizon || 0), TR.ISA.minHoldingYears); // 비교가 의미 있도록 최소 3년
     const res = runCore(P, g1, inflows, 12 * H, false);
     res.minYears = minYears; res.H = H; res.stuck = stuck;
     return res;
@@ -97,8 +100,8 @@
     const firstRoom = EX ? Math.max(0, Math.min(EX.room || 0, ISA_TOTAL_LIMIT - (EX.principal || 0)))
       : P.initialRoom > 0 ? Math.min(Math.max(P.initialRoom, ISA_YEAR_LIMIT), ISA_TOTAL_LIMIT) : ISA_YEAR_LIMIT;
     const m1 = P.firstMat;
-    const isMat = m => m > 0 && m >= m1 && (m - m1) % 36 === 0;
-    const A = { isa: 0, isaPrin: 0, room: firstRoom, openM: P.firstMat === 36 ? 0 : -1, pen: 0, penFree: 0,
+    const isMat = m => m > 0 && m >= m1 && (m - m1) % CYCLE === 0;
+    const A = { isa: 0, isaPrin: 0, room: firstRoom, openM: P.firstMat === CYCLE ? 0 : -1, pen: 0, penFree: 0,
       refundPot: 0, refundPotPrin: 0, refundCash: 0, gen: { v: 0, c: 0 }, paid: 0, transfers: [] };
     const B = { isa: 0, isaPrin: 0, room: firstRoom, gen: { v: 0, c: 0 }, paid: 0 };
     if (EX) { A.isa = B.isa = EX.value || 0; A.isaPrin = B.isaPrin = EX.principal || 0; A.openM = -1; } // 같은 기존 계좌에서 출발
@@ -111,13 +114,13 @@
     resetYr();
 
     for (let m = 0; m <= endM; m++) {
-      // (1) 전략A: 만기(36개월마다) 해지 → 연금저축 이전 → 새 ISA 개설
+      // (1) 전략A: 만기(CYCLE = 36개월마다) 해지 → 연금저축 이전 → 새 ISA 개설
       if (isMat(m)) {
         if (A.isa > 0.5) {
           const gain = A.isa - A.isaPrin;
           const tax = Math.max(gain - P.freeLimit, 0) * P.isaTax;
           const tr = A.isa - tax;
-          const base = Math.min(tr * 0.1, TRANSFER_CREDIT_CAP);
+          const base = Math.min(tr * TRANSFER_CREDIT_RATE, TRANSFER_CREDIT_CAP);
           const refund = base * P.creditRate;
           A.pen += tr; A.penFree += tr - base;
           if (P.reinvest) { A.refundPot += refund; A.refundPotPrin += refund; } else A.refundCash += refund;
@@ -217,8 +220,8 @@
    *      creditRate, pensionRate, calMonth(해지 가능 시점의 달 1~12) }
    * 두 경우 모두 N년 뒤 시점에 전부 찾는다(연금 이전이면 그때부터 연금으로 받는다)고 보고 세후 금액을 비교한다. */
   function deferral(p) {
-    const P = Object.assign({ value: 0, principal: 0, wait0: 0, years: 3, r: 0.08, freeLimit: 2000000, isaTax: 0.099, genTax: 0.154,
-      dest: 'pension', genType: 'overseas', divYield: 0.02, creditRate: 0.132, pensionRate: 0.055, calMonth: 1 }, p || {});
+    const P = Object.assign({ value: 0, principal: 0, wait0: 0, years: 3, r: 0.08, freeLimit: TR.ISA.taxFreeGeneral, isaTax: TR.ISA.excessRate, genTax: TR.FIN_INCOME.withholdingWithLocal,
+      dest: 'pension', genType: 'overseas', divYield: 0.02, creditRate: TR.PENSION_SAVINGS.creditRateLow, pensionRate: TR.PENSION.rateByAge[0][1], calMonth: 1 }, p || {});
     const g1 = Math.pow(1 + P.r, 1 / 12), M = Math.max(1, Math.round(P.years * 12));
     const gM = Math.pow(g1, M), F = P.freeLimit, T = P.isaTax;
     const isaTaxOf = (v, prin, f) => Math.max(v - prin - f, 0) * T;
@@ -233,12 +236,12 @@
     if (P.dest === 'pension') {
       const pr = P.pensionRate, cr = P.creditRate;
       // 지금 이전: 전환금액 10%(최대 300만원) 세액공제, 환급액은 연금저축에 다시 넣어 굴림(원금 비과세, 수익 과세)
-      const base = Math.min(c * 0.1, TRANSFER_CREDIT_CAP), refund = base * cr;
+      const base = Math.min(c * TRANSFER_CREDIT_RATE, TRANSFER_CREDIT_CAP), refund = base * cr;
       const penV = c * gM, refV = refund * gM;
       const penTax = (base + (penV - c)) * pr + (refV - refund) * pr;
       out.term = { final: penV + refV - penTax, isaTax: taxNow, isaTax2: 0, genTax: 0, refund, penTax, value: penV + refV };
       // 유지 후 N년 뒤 이전: 그때 받는 환급은 굴릴 시간이 없음
-      const base2 = Math.min(keepCash * 0.1, TRANSFER_CREDIT_CAP), refund2 = base2 * cr, penTax2 = base2 * pr;
+      const base2 = Math.min(keepCash * TRANSFER_CREDIT_RATE, TRANSFER_CREDIT_CAP), refund2 = base2 * cr, penTax2 = base2 * pr;
       out.keep = { final: keepCash + refund2 - penTax2, isaTax: taxLater, refund: refund2, penTax: penTax2, value: keepV };
     } else {
       // 지금 해지 → 바로 새 ISA (그 달 2,000만원, 매년 1월 2,000만원, 계좌당 1억원) + 나머지는 일반계좌에서 대기
@@ -266,7 +269,7 @@
     return out;
   }
 
-  const api = { simulate, deferral, ISA_YEAR_LIMIT, ISA_TOTAL_LIMIT, TRANSFER_CREDIT_CAP };
+  const api = { simulate, deferral, ISA_YEAR_LIMIT, ISA_TOTAL_LIMIT, TRANSFER_CREDIT_CAP, CYCLE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.IsaEngine = api;
 })(typeof window !== 'undefined' ? window : globalThis);
