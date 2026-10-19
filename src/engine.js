@@ -88,7 +88,7 @@
       Math.ceil(lastA / 12),
       Math.ceil((probe.lastDepositB + 1) / 12),
       Math.ceil(((inflows.length ? inflows[inflows.length - 1].m : 0) + 1) / 12));
-    const H = Math.max(minYears, Math.round(P.horizon || 0), TR.ISA.minHoldingYears); // 비교가 의미 있도록 최소 3년
+    const H = Math.max(minYears, Math.min(Math.round(P.horizon || 0), MAX_M / 12), TR.ISA.minHoldingYears); // 비교가 의미 있도록 최소 3년, 입력 기간은 최대 60년
     const res = runCore(P, g1, inflows, 12 * H, false);
     res.minYears = minYears; res.H = H; res.stuck = stuck;
     return res;

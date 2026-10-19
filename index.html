@@ -896,7 +896,7 @@ if (!window.TTOKJAE_RULES) {
       Math.ceil(lastA / 12),
       Math.ceil((probe.lastDepositB + 1) / 12),
       Math.ceil(((inflows.length ? inflows[inflows.length - 1].m : 0) + 1) / 12));
-    const H = Math.max(minYears, Math.round(P.horizon || 0), TR.ISA.minHoldingYears); // 비교가 의미 있도록 최소 3년
+    const H = Math.max(minYears, Math.min(Math.round(P.horizon || 0), MAX_M / 12), TR.ISA.minHoldingYears); // 비교가 의미 있도록 최소 3년, 입력 기간은 최대 60년
     const res = runCore(P, g1, inflows, 12 * H, false);
     res.minYears = minYears; res.H = H; res.stuck = stuck;
     return res;
@@ -1288,6 +1288,7 @@ if (!window.TTOKJAE_RULES) {
   chipGroup('credit-chips', 'creditRate', Number);
   chipGroup('age-chips', 'pensionRate', Number);
 
+  const H_MAX = 60; // 운용기간 입력 상한(엔진도 60년까지만 굴림). 더 길면 금액이 너무 커져 차트가 멈춤
   function params(extra) {
     const r = num('rate') / 100;
     return Object.assign({
@@ -1299,7 +1300,7 @@ if (!window.TTOKJAE_RULES) {
       openMonth: state.acct === 'existing' ? nowM : state.openMonth, r,
       startYear: state.acct === 'existing' ? nowY : (Number($('start-year').value) || nowY),
       freeLimit: state.freeLimit, creditRate: state.creditRate, pensionRate: state.pensionRate,
-      reinvest: $('reinvest').checked, horizon: num('horizon'),
+      reinvest: $('reinvest').checked, horizon: Math.min(num('horizon'), H_MAX),
     }, extra || {});
   }
 
@@ -1334,9 +1335,10 @@ if (!window.TTOKJAE_RULES) {
 
     // 운용기간 힌트
     const userH = num('horizon');
-    $('horizon-hint').className = 'input-hint' + (userH && userH < res.minShown ? ' warn' : '');
+    $('horizon-hint').className = 'input-hint' + (userH && (userH < res.minShown || userH > H_MAX) ? ' warn' : '');
     $('horizon-hint').textContent = userH && userH < res.minShown
       ? '최소 ' + res.minShown + '년(마지막 ISA가 3년을 채우는 해)이라 ' + res.minShown + '년으로 계산'
+      : userH > H_MAX ? '최대 ' + H_MAX + '년까지 계산해서 ' + H + '년으로 계산'
       : (userH ? H + '년 뒤 전부 찾는다고 계산' : res.stuck && res.minYears >= res.minShown
         ? '자동: ' + H + '년 (ISA 1억 한도가 다 찬 계좌가 3년을 채우는 해, 최소 3년). 더 길게 입력 가능'
         : '자동: ' + H + '년 (마지막으로 넣은 ISA가 3년을 채우는 해, 최소 3년). 더 길게 입력 가능');
