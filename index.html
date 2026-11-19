@@ -184,7 +184,8 @@
   .chart-container.sm { height: 300px; }
 
   .scroll-hint { display: none; margin: 12px 0 0; text-align: center; font-size: 12px; font-weight: 700; color: var(--ink-mute); }
-  @media (max-width: 1140px) { .scroll-hint { display: block; } }
+  @media (max-width: 1120px) { .scroll-hint { display: block; } }
+  .scroll-hint:has(+ .tjl-box) { display: none !important; }
   .table-wrap { overflow-x: auto; margin-top: 8px; border-radius: 12px; }
   .data-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1000px; }
   .data-table th { background: var(--bg-alt); padding: 10px 10px; text-align: right; font-weight: 700; color: var(--ink-soft); font-size: 11px; border-bottom: 1.5px solid var(--border); white-space: nowrap; }
