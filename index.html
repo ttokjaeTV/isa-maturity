@@ -183,6 +183,8 @@
   .chart-container { position: relative; height: 360px; width: 100%; }
   .chart-container.sm { height: 300px; }
 
+  .scroll-hint { display: none; margin: 12px 0 0; text-align: center; font-size: 12px; font-weight: 700; color: var(--ink-mute); }
+  @media (max-width: 1140px) { .scroll-hint { display: block; } }
   .table-wrap { overflow-x: auto; margin-top: 8px; border-radius: 12px; }
   .data-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1000px; }
   .data-table th { background: var(--bg-alt); padding: 10px 10px; text-align: right; font-weight: 700; color: var(--ink-soft); font-size: 11px; border-bottom: 1.5px solid var(--border); white-space: nowrap; }
@@ -547,6 +549,7 @@
   <div class="card">
     <div class="chart-title">연도별 상세</div>
     <div class="chart-subtitle">매년 12월 말 기준 금액입니다. 색칠된 줄(★) = 그 해에 전략A의 ISA가 <span data-rule="ISA.minHoldingYears">3</span>년을 채워 해지 → 연금저축으로 옮긴 해</div>
+    <p class="scroll-hint" aria-hidden="true">← 옆으로 밀어 보세요 →</p>
     <div class="table-wrap" data-member="연도별 상세표">
       <table class="data-table">
         <thead>
