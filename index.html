@@ -55,6 +55,7 @@
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
   .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
   .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .grid-2 > *, .grid-3 > *, .grid-4 > * { min-width: 0; }
   .grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
   .field { margin-bottom: 4px; }
   input { background: var(--white); border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 14px; font-family: inherit; font-size: 16px;
